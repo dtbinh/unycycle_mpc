@@ -129,7 +129,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 
 
     OptimizationAlgorithm algo1(ocp1);
-    algo1.set( KKT_TOLERANCE, 1.000000E-04 );
+    algo1.set( KKT_TOLERANCE, 1.000000E-10 );
     returnValue returnvalue = algo1.solve();
 
     VariablesGrid out_states; 

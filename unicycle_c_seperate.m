@@ -77,11 +77,11 @@ BEGIN_ACADO;                                % Always start with "BEGIN_ACADO".
     
     algo = acado.OptimizationAlgorithm(ocp);
     % !!
-    % algo.set( 'HESSIAN_APPROXIMATION', 'EXACT_HESSIAN' );    
+%     algo.set( 'HESSIAN_APPROXIMATION', 'EXACT_HESSIAN' );    
     % DO NOT USE EXACT HESSIAN WHEN LINKING TO MATLAB ODE
     % !!
     
-    algo.set( 'KKT_TOLERANCE', 1e-4 );
+    algo.set( 'KKT_TOLERANCE', 1e-10);
 
     
 END_ACADO;           % Always end with "END_ACADO".

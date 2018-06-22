@@ -35,7 +35,7 @@ ctrl_hdl_str = func2str(current_hdl);
 % ddr0=[0;0;0];
 % dddr0=[0;0;0];
 
-y0=[0;0;0;0.1];
+y0=[0;0;1;0.1];
 
 % option of ode function 
 options = odeset('RelTol', 1e-3, 'AbsTol', 1e-3);
@@ -84,9 +84,9 @@ end
 
 %% Ode Function of this vehicle
 function [dy] = quad_3d_ode(t, y, ctrl_hdl)
-dy = zeros(4, 1);
 
- 
+dy =zeros(4,1);
+
 % convert the current state 
 px = y(1); 
 py = y(2); 
