@@ -35,7 +35,7 @@ ctrl_hdl_str = func2str(current_hdl);
 % ddr0=[0;0;0];
 % dddr0=[0;0;0];
 
-y0=[0;0;1;0.1];
+y0=[0;0;5;0.1];
 
 % option of ode function 
 options = odeset('RelTol', 1e-3, 'AbsTol', 1e-3);

@@ -22,7 +22,7 @@ void dynamics( double *x, double *f,  void  *user_data ){
     
     double ref[3];
     
-    double vx = 15;
+    double vx = 30;
     double vy = 0;
     
     double px_ref = vx*(t);
