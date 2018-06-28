@@ -1,0 +1,7 @@
+
+The gain in the cost function of the MPC influences the run speed of the simulation greatly. 
+
+
+The gain in the CBF also influences the overshoot when over the obstacle. 
+
+It seems that the more is the time horizon, the less is the overshooting. 

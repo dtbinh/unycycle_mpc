@@ -49,8 +49,8 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     mexPrintf("\nACADO Toolkit for Matlab - Developed by David Ariens and Rien Quirynen, 2009-2013 \n"); 
     mexPrintf("Support available at http://www.acadotoolkit.org/matlab \n \n"); 
 
-    if (nrhs != 6){ 
-      mexErrMsgTxt("This problem expects 6 right hand side argument(s) since you have defined 6 MexInput(s)");
+    if (nrhs != 9){ 
+      mexErrMsgTxt("This problem expects 9 right hand side argument(s) since you have defined 9 MexInput(s)");
     } 
  
     TIME autotime;
@@ -103,6 +103,27 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     mexinput5_temp = mxGetPr(prhs[5]); 
     double mexinput5 = *mexinput5_temp; 
 
+    double *mexinput6_temp = NULL; 
+    if( !mxIsDouble(prhs[6]) || mxIsComplex(prhs[6]) || !(mxGetM(prhs[6])==1 && mxGetN(prhs[6])==1) ) { 
+      mexErrMsgTxt("Input 6 must be a noncomplex scalar double.");
+    } 
+    mexinput6_temp = mxGetPr(prhs[6]); 
+    double mexinput6 = *mexinput6_temp; 
+
+    double *mexinput7_temp = NULL; 
+    if( !mxIsDouble(prhs[7]) || mxIsComplex(prhs[7]) || !(mxGetM(prhs[7])==1 && mxGetN(prhs[7])==1) ) { 
+      mexErrMsgTxt("Input 7 must be a noncomplex scalar double.");
+    } 
+    mexinput7_temp = mxGetPr(prhs[7]); 
+    double mexinput7 = *mexinput7_temp; 
+
+    double *mexinput8_temp = NULL; 
+    if( !mxIsDouble(prhs[8]) || mxIsComplex(prhs[8]) || !(mxGetM(prhs[8])==1 && mxGetN(prhs[8])==1) ) { 
+      mexErrMsgTxt("Input 8 must be a noncomplex scalar double.");
+    } 
+    mexinput8_temp = mxGetPr(prhs[8]); 
+    double mexinput8 = *mexinput8_temp; 
+
     DifferentialEquation acadodata_f1;
     IntermediateState setc_is_1(8);
     setc_is_1(0) = autotime;
@@ -116,7 +137,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     CFunction cLinkModel_1( 5, dynamics ); 
     acadodata_f1 << cLinkModel_1(setc_is_1); 
 
-    OCP ocp1(mexinput0, mexinput1, 20);
+    OCP ocp1(mexinput0, mexinput1, 10);
     ocp1.minimizeMayerTerm(L);
     ocp1.subjectTo(acadodata_f1);
     ocp1.subjectTo(AT_START, px == mexinput2);
@@ -124,8 +145,10 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     ocp1.subjectTo(AT_START, v == mexinput4);
     ocp1.subjectTo(AT_START, psi_ == mexinput5);
     ocp1.subjectTo(AT_START, L == 0.00000000000000000000e+00);
-    ocp1.subjectTo((-1.00000000000000000000e+02) <= a <= 1.00000000000000000000e+02);
-    ocp1.subjectTo((-4.00000000000000000000e+01) <= psi_dot <= 4.00000000000000000000e+01);
+    ocp1.subjectTo((-4.00000000000000000000e+00) <= a <= 4.00000000000000000000e+00);
+    ocp1.subjectTo((-4.00000000000000000000e+00) <= psi_dot <= 4.00000000000000000000e+00);
+    ocp1.subjectTo((4.00000000000000000000e+02*pow(psi_dot,2.00000000000000000000e+00)-4.70596000000000032060e+01+pow(a,2.00000000000000000000e+00)) <= 0.00000000000000000000e+00);
+    ocp1.subjectTo((a*mexinput6+mexinput7*psi_dot-mexinput8) <= 0.00000000000000000000e+00);
 
 
     OptimizationAlgorithm algo1(ocp1);

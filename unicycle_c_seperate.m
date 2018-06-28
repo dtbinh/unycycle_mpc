@@ -17,14 +17,28 @@ BEGIN_ACADO;                                % Always start with "BEGIN_ACADO".
     DifferentialState px p_y v psi_ L;  %sometimes, the name of the variables induces errors, I don't know why. 
     Control a psi_dot;
     
+%     cc = 1; 
+%     if (v>cc)
+%         matrix_line = [cos(psi_), -v*sin(psi_); sin(psi_),  v*cos(psi_)]; 
+%     else
+%         matrix_line = [cos(psi_), -cc*sin(psi_); sin(psi_),  cc*cos(psi_)]; 
+%     end
+    
+    
     input1 = acado.MexInput;   %start time   
     input2 = acado.MexInput;  %final time 
     
-    input3 = acado.MexInput;   %state 1 
-    input4 = acado.MexInput;   %state 2 
-    input5 = acado.MexInput;   %state 3 
-    input6 = acado.MexInput;   %state 3 
+    input3 = acado.MexInput;   %feedback state 1 
+    input4 = acado.MexInput;   %feedback state 2 
+    input5 = acado.MexInput;   %feedback state 3 
+    input6 = acado.MexInput;   %feedback state 4 
 
+    %coe_cbf*u <= remaining
+    coe_cbf1 = acado.MexInput;  %coeffecients of the cbf constraints
+    coe_cbf2 = acado.MexInput;  %coeffecients of the cbf constraints
+    remaining = acado.MexInput;  %coeffecients of the cbf constraints
+    
+%      coe_cbf = acado.MexInputMatrix;  %coeffecients of the cbf constraints
 
  
 %     input_ = acado.MexInputMatrix;      % initializeControls. Initializations are always matrices, also when they contain only one row
@@ -33,7 +47,7 @@ BEGIN_ACADO;                                % Always start with "BEGIN_ACADO".
 %     time = input_(1); 
 %     x_feedback = [input_(2); input_(3); input_(4); input_(5)];
     
-%     time = input1; 
+    time = input1; 
 %     x_feedback = [input2; input3; input4; input5];
 
  
@@ -48,10 +62,24 @@ BEGIN_ACADO;                                % Always start with "BEGIN_ACADO".
 %     time_horizon = 0.5;
 %     t0 = time;  
 %     tf= time+time_horizon; 
-
+% 
 %     state_tf = terminal_state(tf);
     
-    ocp = acado.OCP(input1, input2, 20);
+%     test = cbf_seperate([px; p_y; v; psi_]);
+
+    i=1; 
+    
+    if(i>=0)
+        i = i + 2 -2 *3*i;
+    end
+    
+    teatea =v; 
+    
+
+    testtt = test_mex([v, 2, 3]);  %test only
+ 
+ 
+    ocp = acado.OCP(input1, input2, 10);
     
     ocp.minimizeMayerTerm(L);  % minimizeLagrange is not yet implemented for matlab ode calls!
                                % but you can define another differential
@@ -71,11 +99,27 @@ BEGIN_ACADO;                                % Always start with "BEGIN_ACADO".
 %     ocp.subjectTo( 'AT_END'  , p_y ==  state_tf(2) );
 %     ocp.subjectTo( 'AT_END'  , v ==  state_tf(3) );
 %     ocp.subjectTo( 'AT_END'  , psi_ ==  state_tf(4) ); %sometimes, the name of the variables induces errors, I don't know why. 
-    ocp.subjectTo( -100 <= a <= 100);   
-    ocp.subjectTo( -40 <= psi_dot <= 40); 
+
+%input bounded: 
+    ocp.subjectTo( -4 <= a <= 4);       
+    ocp.subjectTo( -4 <= psi_dot  <= 4); 
+    ocp.subjectTo( a^2+ 20^2*psi_dot^2 - (0.7*9.8)^2  <= 0); 
+%      ocp.subjectTo(  (px - 20)^2  + p_y^2 -1  >= 0); 
+
+
+    
+%CBF constraints: 
+%very important for this problem, because there may be singular 
+%sometimes, this constant should be big enough, in order to let the solver
+%works 
+ 
+ 
+     ocp.subjectTo(  coe_cbf1*a + coe_cbf2*psi_dot -remaining  <= 0 ); 
     
     
     algo = acado.OptimizationAlgorithm(ocp);
+    
+     
     % !!
 %     algo.set( 'HESSIAN_APPROXIMATION', 'EXACT_HESSIAN' );    
     % DO NOT USE EXACT HESSIAN WHEN LINKING TO MATLAB ODE
@@ -93,7 +137,7 @@ END_ACADO;           % Always end with "END_ACADO".
 % Run the test
 % out = unicycle_RUN(0, 0, 0, 0, 0);
 
-out = unicycle_input_RUN(0, 1, 0, 0, 0, 0);
+out = unicycle_input_RUN(0, 1, 0, 0, 0, 0, 1, 1, 0);
 
 
 % u_k = out.CONTROLS(1,2:end)'; 

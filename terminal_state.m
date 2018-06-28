@@ -6,4 +6,7 @@ function out = terminal_state(t)
 %     ref[2] = 15; 
 %     ref[3] = 0;
     v =5; 
+    
+ 
     out = [v*t; 0; v; 0];
+ 

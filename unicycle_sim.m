@@ -35,7 +35,7 @@ ctrl_hdl_str = func2str(current_hdl);
 % ddr0=[0;0;0];
 % dddr0=[0;0;0];
 
-y0=[0;0;5;0.1];
+y0=[0;0;19;0.0];
 
 % option of ode function 
 options = odeset('RelTol', 1e-3, 'AbsTol', 1e-3);
@@ -46,7 +46,9 @@ disp(strcat('Controller: ', ctrl_hdl_str));
 disp('---------------------------------------------');
 tspan = [0 T];
 % [t1, y1] = ode15s(@quad_3d_ode, tspan, y0, options, current_hdl);
-[t1, y1] = ode45(@quad_3d_ode, tspan, y0, options, current_hdl);
+% [t1, y1] = ode45(@quad_3d_ode, tspan, y0, options, current_hdl);
+
+[t1, y1] = self_solverdynamics(@quad_3d_ode, tspan, y0, options, current_hdl);
 
 % save all the data into .mat file  
 save('sim_data.mat');
@@ -65,17 +67,17 @@ function [u] = virtual_Control(t, y, trajd)
 % x_feedback = [y(1);y(2);y(3)];
 
 %time horizon: 
-horizon = 1; 
+horizon = 5; 
 
 
 input = [t; y];
 
 %using the m-file: 
-% u = unicycle_c(input);    
+coef_ = cbf_seperate(y); 
 
-
+ 
 %using the mex-file: (should run unicycle_c_seperate.m firstly)
-out = unicycle_input_RUN(t, t+horizon, y(1), y(2), y(3), y(4));
+out = unicycle_input_RUN(t, t+horizon, y(1), y(2), y(3), y(4), coef_(1), coef_(2), coef_(3) );
 u = out.CONTROLS(1,2:end)'; 
  
     
