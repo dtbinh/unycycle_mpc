@@ -24,6 +24,7 @@ for i=1:N
     coef_ =  cbf_seperate(state_fb);   %cefficients given by cbf
     t0_i = t_series(i);
     out = unicycle_input_RUN(t0_i, t0_i+t_sampl, y(1), y(2), y(3), y(4), coef_(1), coef_(2), coef_(3) ); 
+    state_fb = out.STATES(2,; %update the states 
 end
 
-u = out.CONTROLS(1,2:end)'; 
+control = out.CONTROLS(1,2:end)'; 

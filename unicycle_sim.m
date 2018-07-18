@@ -12,7 +12,7 @@ function unicycle_sim(T)
 clc;
 close all;
 if nargin < 1
-    T = 15; 
+    T = 200; 
 end
 
 
@@ -35,7 +35,7 @@ ctrl_hdl_str = func2str(current_hdl);
 % ddr0=[0;0;0];
 % dddr0=[0;0;0];
 
-y0=[0;0;19;0.0];
+y0=[0;0;10;0.0];
 
 % option of ode function 
 options = odeset('RelTol', 1e-3, 'AbsTol', 1e-3);
@@ -67,18 +67,56 @@ function [u] = virtual_Control(t, y, trajd)
 % x_feedback = [y(1);y(2);y(3)];
 
 %time horizon: 
-horizon = 5; 
-
+horizon = 1; 
 
 input = [t; y];
 
-%using the m-file: 
-coef_ = cbf_seperate(y); 
+% %using the m-file: 
+% coef_ = cbf_seperate(y);   %single constraints 
+% 
+% % using the mex-file: (should run unicycle_c_seperate.m firstly)
+% out = unicycle_input_RUN(t, t+horizon, y(1), y(2), y(3), y(4), ...
+%     coef_(1), coef_(2), coef_(3), ... %row 1 
+%     coef_(1), coef_(2), coef_(3), ... %row 2 
+%     coef_(1), coef_(2), coef_(3), ... %row 3 
+%     coef_(1), coef_(2), coef_(3), ... %row 4 
+%     coef_(1), coef_(2), coef_(3), ...  %row 5 
+%     coef_(1), coef_(2), coef_(3), ... %row 6 
+%     coef_(1), coef_(2), coef_(3), ... %row 7
+%     coef_(1), coef_(2), coef_(3), ... %row 8 
+%     coef_(1), coef_(2), coef_(3), ... %row 9
+%     coef_(1), coef_(2), coef_(3));
+
+% only static obstacles: 
+% coef_ = cbf_seperate_mult_constraints(y); 
+
+% can address dynamics obstacles: 
+coef_ = cbf_seperate_mult_dynamic_constraints([y; t]); 
+
+if (coef_.C == 1)
+    %the feasible control space is empty
+    u = [-4; 0]; 
+else
+% %     using the mex-file: (should run unicycle_c_seperate.m firstly)
+    out = unicycle_input_RUN(t, t+horizon, y(1), y(2), y(3), y(4), ...
+        coef_.A(1,1), coef_.A(1,2), coef_.B(1), ... %row 1 
+        coef_.A(2,1), coef_.A(2,2), coef_.B(2),  ... %row 2 
+        coef_.A(3,1), coef_.A(3,2), coef_.B(3),  ... %row 3 
+        coef_.A(4,1), coef_.A(4,2), coef_.B(4),  ... %row 4 
+        coef_.A(5,1), coef_.A(5,2), coef_.B(5),  ...  %row 5 
+        coef_.A(6,1), coef_.A(6,2), coef_.B(6), ... %row 6 
+        coef_.A(7,1), coef_.A(7,2), coef_.B(7),  ... %row 7
+        coef_.A(8,1), coef_.A(8,2), coef_.B(8), ... %row 8 
+        coef_.A(9,1), coef_.A(9,2), coef_.B(9),  ... %row 9
+        coef_.A(10,1), coef_.A(10,2), coef_.B(10));
 
  
-%using the mex-file: (should run unicycle_c_seperate.m firstly)
-out = unicycle_input_RUN(t, t+horizon, y(1), y(2), y(3), y(4), coef_(1), coef_(2), coef_(3) );
-u = out.CONTROLS(1,2:end)'; 
+    if (out.CONVERGENCE_ACHIEVED ==1)
+        u = out.CONTROLS(1,2:end)';   %the MPC control 
+    else
+        u = [-4;0];  %the MPC solver does not converge
+    end
+end
  
     
 end

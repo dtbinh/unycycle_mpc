@@ -15,41 +15,61 @@ BEGIN_ACADO;                                % Always start with "BEGIN_ACADO".
     acadoSet('problemname', 'unicycle_input'); 
     
     DifferentialState px p_y v psi_ L;  %sometimes, the name of the variables induces errors, I don't know why. 
-    Control a psi_dot;
-    
-%     cc = 1; 
-%     if (v>cc)
-%         matrix_line = [cos(psi_), -v*sin(psi_); sin(psi_),  v*cos(psi_)]; 
-%     else
-%         matrix_line = [cos(psi_), -cc*sin(psi_); sin(psi_),  cc*cos(psi_)]; 
-%     end
-    
+    Control a psi_dot;    
     
     input1 = acado.MexInput;   %start time   
-    input2 = acado.MexInput;  %final time 
+    input2 = acado.MexInput;  %final time   
     
+    %%feedback states: 
     input3 = acado.MexInput;   %feedback state 1 
     input4 = acado.MexInput;   %feedback state 2 
     input5 = acado.MexInput;   %feedback state 3 
     input6 = acado.MexInput;   %feedback state 4 
 
+    %%maximum 5 obstacles, each has 2 constraints, then Au<b, A is 10-by-2,
+    %b is 2-by-1, totally 30 inputs 
     %coe_cbf*u <= remaining
-    coe_cbf1 = acado.MexInput;  %coeffecients of the cbf constraints
-    coe_cbf2 = acado.MexInput;  %coeffecients of the cbf constraints
-    remaining = acado.MexInput;  %coeffecients of the cbf constraints
+    coe_cbfqp_a11 = acado.MexInput;  %coeffecients of the cbf constraints
+    coe_cbfqp_a12 = acado.MexInput;  %coeffecients of the cbf constraints
+    coe_cbfqp_b1 = acado.MexInput;  %coeffecients of the cbf constraints
     
-%      coe_cbf = acado.MexInputMatrix;  %coeffecients of the cbf constraints
-
+    coe_cbfqp_a21 = acado.MexInput;  %coeffecients of the cbf constraints
+    coe_cbfqp_a22 = acado.MexInput;  %coeffecients of the cbf constraints
+    coe_cbfqp_b2 = acado.MexInput;  %coeffecients of the cbf constraints
+    
+    coe_cbfqp_a31 = acado.MexInput;  %coeffecients of the cbf constraints
+    coe_cbfqp_a32 = acado.MexInput;  %coeffecients of the cbf constraints
+    coe_cbfqp_b3 = acado.MexInput;  %coeffecients of the cbf constraints
+    
+    coe_cbfqp_a41 = acado.MexInput;  %coeffecients of the cbf constraints
+    coe_cbfqp_a42 = acado.MexInput;  %coeffecients of the cbf constraints
+    coe_cbfqp_b4 = acado.MexInput;  %coeffecients of the cbf constraints
+    
+    coe_cbfqp_a51 = acado.MexInput;  %coeffecients of the cbf constraints
+    coe_cbfqp_a52 = acado.MexInput;  %coeffecients of the cbf constraints
+    coe_cbfqp_b5 = acado.MexInput;  %coeffecients of the cbf constraints
+    
+    coe_cbfqp_a61 = acado.MexInput;  %coeffecients of the cbf constraints
+    coe_cbfqp_a62 = acado.MexInput;  %coeffecients of the cbf constraints
+    coe_cbfqp_b6 = acado.MexInput;  %coeffecients of the cbf constraints
+    
+    coe_cbfqp_a71 = acado.MexInput;  %coeffecients of the cbf constraints
+    coe_cbfqp_a72 = acado.MexInput;  %coeffecients of the cbf constraints
+    coe_cbfqp_b7 = acado.MexInput;  %coeffecients of the cbf constraints
+    
+    coe_cbfqp_a81 = acado.MexInput;  %coeffecients of the cbf constraints
+    coe_cbfqp_a82 = acado.MexInput;  %coeffecients of the cbf constraints
+    coe_cbfqp_b8 = acado.MexInput;  %coeffecients of the cbf constraints
+    
+    coe_cbfqp_a91 = acado.MexInput;  %coeffecients of the cbf constraints
+    coe_cbfqp_a92 = acado.MexInput;  %coeffecients of the cbf constraints
+    coe_cbfqp_b9 = acado.MexInput;  %coeffecients of the cbf constraints
+    
+    coe_cbfqp_a101 = acado.MexInput;  %coeffecients of the cbf constraints
+    coe_cbfqp_a102 = acado.MexInput;  %coeffecients of the cbf constraints
+    coe_cbfqp_b10 = acado.MexInput;  %coeffecients of the cbf constraints
+    
  
-%     input_ = acado.MexInputMatrix;      % initializeControls. Initializations are always matrices, also when they contain only one row
-%     
-%     %input: 
-%     time = input_(1); 
-%     x_feedback = [input_(2); input_(3); input_(4); input_(5)];
-    
-    time = input1; 
-%     x_feedback = [input2; input3; input4; input5];
-
  
     
     % Set default objects
@@ -59,24 +79,6 @@ BEGIN_ACADO;                                % Always start with "BEGIN_ACADO".
     %Set up optimal control problem, 
     %start at t0, control in 40 intervals to tf
     %parameters: 
-%     time_horizon = 0.5;
-%     t0 = time;  
-%     tf= time+time_horizon; 
-% 
-%     state_tf = terminal_state(tf);
-    
-%     test = cbf_seperate([px; p_y; v; psi_]);
-
-    i=1; 
-    
-    if(i>=0)
-        i = i + 2 -2 *3*i;
-    end
-    
-    teatea =v; 
-    
-
-    testtt = test_mex([v, 2, 3]);  %test only
  
  
     ocp = acado.OCP(input1, input2, 10);
@@ -103,8 +105,12 @@ BEGIN_ACADO;                                % Always start with "BEGIN_ACADO".
 %input bounded: 
     ocp.subjectTo( -4 <= a <= 4);       
     ocp.subjectTo( -4 <= psi_dot  <= 4); 
-    ocp.subjectTo( a^2+ 20^2*psi_dot^2 - (0.7*9.8)^2  <= 0); 
-%      ocp.subjectTo(  (px - 20)^2  + p_y^2 -1  >= 0); 
+%     ocp.subjectTo(  sqrt((px - 80)^2  + (p_y -0.5)^2)  -1  >= 0); 
+%     ocp.subjectTo( a^2+ 10^2*psi_dot^2 - (0.7*9.8)^2  <= 0); %slip constraints 
+%      ocp.subjectTo(  sqrt((px - 80)^2  + (p_y -0.5)^2)  -1  >= 0); 
+     
+%      ocp.subjectTo(   sqrt(2*4*(sqrt((px - 80)^2  + (p_y -0.5)^2)-1)) + [px-80; p_y-0.5]'/sqrt((px - 80)^2  + (p_y -0.5)^2)*[v*cos(psi_); v*sin(psi_)] >=0 );
+%      sqrt(2*alpha*(norm_deltap-Ds)) + rel_pos'/norm_deltap*rel_vel
 
 
     
@@ -112,11 +118,33 @@ BEGIN_ACADO;                                % Always start with "BEGIN_ACADO".
 %very important for this problem, because there may be singular 
 %sometimes, this constant should be big enough, in order to let the solver
 %works 
+
+%% if do not use CBF to generate constraints, uncomment the following: 
+% pos_ob_array_pre(:,1) = [50; -1.1];
+% pos_ob_array_pre(:,2) = [50; 1.1];
+% pos_ob_array_pre(:,3) = [51.8; -2.8];
+% pos_ob_array_pre(:,4) = [51.8;  0.1];
+% pos_ob_array_pre(:,5) = [51.8;  2.8];
+%     ocp.subjectTo(  sqrt((px - 50)^2  + (p_y +1.1)^2)  -1  >= 0); 
+%     ocp.subjectTo(  sqrt((px - 50)^2  + (p_y- 1.1)^2)  -1  >= 0); 
+%     ocp.subjectTo(  sqrt((px - 51.8)^2  + (p_y + 2.8)^2)  -1  >= 0); 
+%     ocp.subjectTo(  sqrt((px - 51.8)^2  + (p_y - 0.0)^2)  -1  >= 0); 
+%     ocp.subjectTo(  sqrt((px - 51.8)^2  + (p_y - 2.8)^2)  -1  >= 0); 
+%       
+    ocp.subjectTo(  -3.7<= p_y <= 3.7); 
  
- 
-     ocp.subjectTo(  coe_cbf1*a + coe_cbf2*psi_dot -remaining  <= 0 ); 
-    
-    
+ %% if use CBF generate constraints, uncomment the following: 
+     ocp.subjectTo(  coe_cbfqp_a11*a + coe_cbfqp_a12*psi_dot -coe_cbfqp_b1  <= 0 ); 
+     ocp.subjectTo(  coe_cbfqp_a21*a + coe_cbfqp_a22*psi_dot -coe_cbfqp_b2  <= 0 ); 
+     ocp.subjectTo(  coe_cbfqp_a31*a + coe_cbfqp_a32*psi_dot -coe_cbfqp_b3  <= 0 ); 
+     ocp.subjectTo(  coe_cbfqp_a41*a + coe_cbfqp_a42*psi_dot -coe_cbfqp_b4  <= 0 ); 
+     ocp.subjectTo(  coe_cbfqp_a51*a + coe_cbfqp_a52*psi_dot -coe_cbfqp_b5  <= 0 ); 
+     ocp.subjectTo(  coe_cbfqp_a61*a + coe_cbfqp_a62*psi_dot -coe_cbfqp_b6  <= 0 ); 
+     ocp.subjectTo(  coe_cbfqp_a71*a + coe_cbfqp_a72*psi_dot -coe_cbfqp_b7  <= 0 ); 
+     ocp.subjectTo(  coe_cbfqp_a81*a + coe_cbfqp_a82*psi_dot -coe_cbfqp_b8  <= 0 ); 
+     ocp.subjectTo(  coe_cbfqp_a91*a + coe_cbfqp_a92*psi_dot -coe_cbfqp_b9  <= 0 ); 
+     ocp.subjectTo(  coe_cbfqp_a101*a + coe_cbfqp_a102*psi_dot -coe_cbfqp_b10  <= 0 ); 
+
     algo = acado.OptimizationAlgorithm(ocp);
     
      
@@ -137,7 +165,19 @@ END_ACADO;           % Always end with "END_ACADO".
 % Run the test
 % out = unicycle_RUN(0, 0, 0, 0, 0);
 
-out = unicycle_input_RUN(0, 1, 0, 0, 0, 0, 1, 1, 0);
+out = unicycle_input_RUN(0, 1, ...  %start time and final time 
+    0, 0, 0, 0, ... %feedback state
+    1, 1, 0, ... %first row of cbf qp constraints 
+    1, 1, 0, ... %2 row of cbf qp constraints 
+    1, 1, 0, ... %3 row of cbf qp constraints 
+    1, 1, 0, ... %4 row of cbf qp constraints 
+    1, 1, 0, ... %5 row of cbf qp constraints 
+    1, 1, 0, ... %6 row of cbf qp constraints 
+    1, 1, 0, ... %7 row of cbf qp constraints 
+    1, 1, 0, ... %8 row of cbf qp constraints 
+    1, 1, 0, ... %9 row of cbf qp constraints 
+    1, 1, 0 ); %10 row of cbf qp constraints 
+    
 
 
 % u_k = out.CONTROLS(1,2:end)'; 

@@ -9,6 +9,11 @@ void dynamics( double *x, double *f,  void  *user_data ){
     // x[6] -> u(1), a
     // x[7] -> u(2), psi_dot
     
+    if(x[3]<0)
+    {
+        x[3]=0;
+    }
+    
     double t = x[0];
     double px = x[1];
     double py = x[2];
@@ -22,15 +27,15 @@ void dynamics( double *x, double *f,  void  *user_data ){
     
     double ref[3];
     
-    double vx = 20;
+    double vx = 10;
     double vy = 0;
     
     double px_ref = vx*(t);
-    double py_ref = 0* sin(4*t);
+    double py_ref = 0* sin(1*t);
     double psi_ref;
      
     double px_dot_ref = vx;
-    double py_dot_ref = 0*cos(4*t);
+    double py_dot_ref = 0*cos(1*t);
      
     double v_i_ref = sqrt(px_dot_ref*px_dot_ref + py_dot_ref*py_dot_ref);
       
@@ -75,6 +80,7 @@ void dynamics( double *x, double *f,  void  *user_data ){
     f[1] =  v*sin(psi);       //dot(py)
     f[2] =  a;              //dot(v)
     f[3] =  psi_dot;                    //dot(psi)
-    f[4] =  0.2*delta_x+  2*a*a + 2*psi_dot*psi_dot;       //dot(L)
+    f[4] =  0.2*delta_x+  10*a*a + 10*psi_dot*psi_dot;       //dot(L)
+    //notice the gain in the cost functions should be carefully tunned. 
     
 }

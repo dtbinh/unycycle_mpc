@@ -9,6 +9,13 @@ t = t1;
 P_sens = y1(:, 1:2); 
 P_com = P_sens;
 % P_com=reference(:,1:2);
+
+len = length(t); 
+h_plot = zeros(len,1);
+
+for i=1:len
+    h_plot(i) = (P_sens(i,1) - 80)^2 + (P_sens(i,2) - 0.5)^2 -1;
+end
  
 
 
@@ -21,7 +28,10 @@ title('POSITION TRACKING:SENSED VS COMMAND');
 % legend('traj_{com}','traj_{sen}');
 axis equal; 
 
-% plot(ob(:,1),ob(:,2), '*r');
+global pos_ob_array_pre;
+for i=1:size(pos_ob_array_pre,2)
+    plot(pos_ob_array_pre(1,i), pos_ob_array_pre(2,i), '*r');
+end
  
 figure(2);   
 subplot(4,1,1);
@@ -46,7 +56,10 @@ ylabel('\psi(degree)');
  xlabel('time(s)');
  
  
- 
+ figure(3);
+ plot(t, h_plot); 
+ylabel('distance');
+ xlabel('time(s)');
  
 
 % figure(3);

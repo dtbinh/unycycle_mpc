@@ -30,7 +30,7 @@ Ds = 1;
 p_x_dot = v*cos(psi_);
 p_y_dot = v*sin(psi_); 
 
-pos_ob = [80; 0.5];
+pos_ob = [800; 0.5]; %obstacle 
 vel_ob = [0; 0];
 
 rel_pos = [px; p_y] - pos_ob;
