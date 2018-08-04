@@ -6,7 +6,7 @@ close all;
 
 t = t1;
 
-P_sens = y1(:, 1:2); 
+P_sens = y1(:, [6,5]); 
 P_com = P_sens;
 % P_com=reference(:,1:2);
 
@@ -46,7 +46,7 @@ ylabel('Y(m)');
  xlabel('time(s)');
  
  subplot(4,1,3);
-plot(t,y1(:,3) ),grid;
+plot(t,y1(:,1) ),grid;
 ylabel('v(m/s)');
  xlabel('time(s)');
  
@@ -62,7 +62,7 @@ ylabel('distance');
  xlabel('time(s)');
  
 
-% figure(3);
+% figure(4);
 % plot(t,input),grid;
 % ylabel('control input');xlabel('time(s)');
 

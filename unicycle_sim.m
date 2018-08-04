@@ -12,7 +12,7 @@ function unicycle_sim(T)
 clc;
 close all;
 if nargin < 1
-    T = 200; 
+    T = 20; 
 end
 
 
@@ -35,10 +35,10 @@ ctrl_hdl_str = func2str(current_hdl);
 % ddr0=[0;0;0];
 % dddr0=[0;0;0];
 
-y0=[0;0;10;0.0];
+y0=[8;0;0;0.0; 0; 0];
 
 % option of ode function 
-options = odeset('RelTol', 1e-3, 'AbsTol', 1e-3);
+options = odeset('RelTol', 1e-4, 'AbsTol', 1e-4);
 
 % simulation process
 disp('The simulation process has started.');
@@ -46,9 +46,9 @@ disp(strcat('Controller: ', ctrl_hdl_str));
 disp('---------------------------------------------');
 tspan = [0 T];
 % [t1, y1] = ode15s(@quad_3d_ode, tspan, y0, options, current_hdl);
-% [t1, y1] = ode45(@quad_3d_ode, tspan, y0, options, current_hdl);
+[t1, y1] = ode45(@quad_3d_ode, tspan, y0, options, current_hdl);
 
-[t1, y1] = self_solverdynamics(@quad_3d_ode, tspan, y0, options, current_hdl);
+% [t1, y1] = self_solverdynamics(@quad_3d_ode, tspan, y0, options, current_hdl);
 
 % save all the data into .mat file  
 save('sim_data.mat');
@@ -71,6 +71,9 @@ horizon = 1;
 
 input = [t; y];
 
+coef_.A = zeros(10,2);
+coef_.B = zeros(10,1);
+
 % %using the m-file: 
 % coef_ = cbf_seperate(y);   %single constraints 
 % 
@@ -91,14 +94,15 @@ input = [t; y];
 % coef_ = cbf_seperate_mult_constraints(y); 
 
 % can address dynamics obstacles: 
-coef_ = cbf_seperate_mult_dynamic_constraints([y; t]); 
+% coef_ = cbf_seperate_mult_dynamic_constraints([y; t]); 
 
-if (coef_.C == 1)
-    %the feasible control space is empty
-    u = [-4; 0]; 
-else
+% if (coef_.C == 1)
+%     %the feasible control space is empty
+%     u = [-4; 0]; 
+% else
 % %     using the mex-file: (should run unicycle_c_seperate.m firstly)
-    out = unicycle_input_RUN(t, t+horizon, y(1), y(2), y(3), y(4), ...
+    out = bicycle_input_RUN(t, t+horizon, ...
+        y(1), y(2), y(3), y(4), y(5), y(6),  ...
         coef_.A(1,1), coef_.A(1,2), coef_.B(1), ... %row 1 
         coef_.A(2,1), coef_.A(2,2), coef_.B(2),  ... %row 2 
         coef_.A(3,1), coef_.A(3,2), coef_.B(3),  ... %row 3 
@@ -114,9 +118,9 @@ else
     if (out.CONVERGENCE_ACHIEVED ==1)
         u = out.CONTROLS(1,2:end)';   %the MPC control 
     else
-        u = [-4;0];  %the MPC solver does not converge
+        u = [0; -4];  %the MPC solver does not converge
     end
-end
+% end
  
     
 end
@@ -125,26 +129,72 @@ end
 %% Ode Function of this vehicle
 function [dy] = quad_3d_ode(t, y, ctrl_hdl)
 
-dy =zeros(4,1);
-
-% convert the current state 
-px = y(1); 
-py = y(2); 
-v = y(3); 
-psi = y(4);
-
-
+dy =zeros(6,1);
 
 % get the current reference and control input 
 trajd = traj_gen(t);
 u = feval(ctrl_hdl, t, y, trajd);
 
+%% unicycle model: 
+% % convert the current state 
+% px = y(1); 
+% py = y(2); 
+% v = y(3); 
+% psi = y(4);
+% 
+% %update the system dynamics 
+% dy(1) = v*cos(psi); 
+% dy(2) = v*sin(psi);
+% dy(3) = u(1);
+% dy(4) = u(2);  
 
-%update the system dynamics 
-dy(1) = v*cos(psi); 
-dy(2) = v*sin(psi);
-dy(3) = u(1);
-dy(4) = u(2);  
+
+%% 2018-08-04, bicycle model: 
+%input signal 
+delta_f = u(1);   %steering angle 
+a_x = u(2);    %acc 
+
+if (y(1)<= 0)
+    y(1) = 1e-4;
+end 
+
+%states:
+xp_dot = y(1);  %lateral speed
+yp_dot = y(2);  %longitudinal speed
+psi_dot = y(3); 
+epsi = y(4);
+ey= y(5);  %lateral position
+s = y(6);  %logitudinal position 
+
+%constants: 
+a = 1.41; 
+b = 1.576; 
+mu =0.5; 
+Fzf = 21940/2; 
+Fzr = 21940/2; 
+cf = 65000; 
+cr = 65000; 
+m = 2194; 
+Iz = 4770; 
+psi_dot_com = 0;
+p =Iz/(m*b);
+
+%state equation: 
+f_x = [ yp_dot*psi_dot;... 
+    -2*(cf+cr)/(m*xp_dot)*yp_dot-2*(a*cf-b*cr)/m/xp_dot*psi_dot-xp_dot*psi_dot; ...
+     -2*(a*cf-b*cr)/Iz/xp_dot*yp_dot-2*(a*a*cf+b*b*cr)/Iz/xp_dot*psi_dot;...
+     psi_dot - psi_dot_com;...
+     yp_dot*cos(epsi) + xp_dot*sin(epsi); ...
+     xp_dot*cos(epsi)-yp_dot*cos(epsi)];
+ 
+g_x = [0, 1; ...
+    2*cf/m, 0; ...
+    2*a*cf/Iz, 0;...
+    0, 0;...
+    0, 0;...
+    0, 0];
+
+dy = f_x + g_x*u;
 
 % -----------------------------------------------
 % check simulation time for stability property

@@ -336,6 +336,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     ocp1.subjectTo(AT_START, L == 0.00000000000000000000e+00);
     ocp1.subjectTo((-4.00000000000000000000e+00) <= a <= 4.00000000000000000000e+00);
     ocp1.subjectTo((-4.00000000000000000000e+00) <= psi_dot <= 4.00000000000000000000e+00);
+    ocp1.subjectTo((1.00000000000000000000e+02*pow(psi_dot,2.00000000000000000000e+00)-4.70596000000000032060e+01+pow(a,2.00000000000000000000e+00)) <= 0.00000000000000000000e+00);
     ocp1.subjectTo((-3.70000000000000017764e+00) <= p_y <= 3.70000000000000017764e+00);
     ocp1.subjectTo((a*mexinput6+mexinput7*psi_dot-mexinput8) <= 0.00000000000000000000e+00);
     ocp1.subjectTo((a*mexinput9+mexinput10*psi_dot-mexinput11) <= 0.00000000000000000000e+00);

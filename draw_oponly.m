@@ -1,19 +1,19 @@
 
 figure;
 
-% DifferentialState px py v psi L;
-%     Control a psi_dot;
+% DifferentialState xp_dot yp_dot  psi_dot epsi  ey s L;  %sometimes, the name of the variables induces errors, I don't know why. 
+%     Control delta_f a_x;  
     
 subplot(2,2,1)
-plot(out.STATES(:,1), out.STATES(:,2), 'r')
+plot(out.STATES(:,1), out.STATES(:,7), 'r')
 title('px');
 
 subplot(2,2,2)
-plot(out.STATES(:,1), out.STATES(:,3), 'r')
+plot(out.STATES(:,1), out.STATES(:,6), 'r')
 title('py');
 
 subplot(2,2,3)
-plot(out.STATES(:,1), out.STATES(:,4), 'r')
+plot(out.STATES(:,1), out.STATES(:,2), 'r')
 title('v');
 
 subplot(2,2,4)
@@ -22,7 +22,7 @@ title('psi');
 
 
 figure;  
-plot(out.STATES(:,1), out.STATES(:,6), 'r')
+plot(out.STATES(:,1), out.STATES(:,8), 'r')
 title('L');
 
 figure;  
@@ -31,5 +31,5 @@ title('u');
 
 
 figure;
-plot(out.STATES(:,1), 0.5.*out.STATES(:,4).*out.STATES(:,4), 'r')
+plot(out.STATES(:,1), 0.5.*out.STATES(:,2).*out.STATES(:,2), 'r')
 title('Kinetic Engery');
