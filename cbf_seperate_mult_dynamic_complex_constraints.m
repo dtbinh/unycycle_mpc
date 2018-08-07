@@ -53,8 +53,8 @@ for i_ob = 1:no_ob
 %     Ds = 2; 
     theta_d_big = asin((Ds_angle)/results_2(i_ob).norm_relpos) - asin( Ds0 /results_2(i_ob).norm_relpos);
 %     theta_d_big =0.1;
-    theta_d_small = theta_d_big/200000; 
-%     theta_d_small = -0.01; 
+    theta_d_small = theta_d_big/2000000000; 
+%     theta_d_small = -0.001; 
     if (beta_2(i_ob) == 0 ) && (results_2(i_ob).h_angle_fix > -theta_d_small)
         beta_2(i_ob) = 1;
     elseif (beta_2(i_ob) == 1 ) && (results_2(i_ob).h_angle_fix <=  -theta_d_big/10000000)
@@ -77,7 +77,7 @@ for aa = 1:no_ob
         theta_d_small = theta_d_big/20;
         %if does not point to the obstacle:
     
-        if  (results_2(aa).h_angle_fix>= -theta_d_big)   %pointing constraint
+        if  (results_2(aa).h_angle_fix>= -theta_d_big/10000000)   %pointing constraint
             slack_mult(1, no_ob) = 1;   %active
         else
             slack_mult(1, no_ob) = 0;
@@ -142,8 +142,10 @@ for i_combine = 1:nu_combine
                  A_n_or = [A_n_or;  results_2(aa).A_n_angle_fix;   ]; 
                  b_n_or = [b_n_or;   results_2(aa).B_n_angle_fix;  ];
             elseif (order(i_combine, aa) == 2)    %distance constraint
+%                  A_n_or = [A_n_or;  results_2(aa).A_n_angle_fix;   ]; 
+%                  b_n_or = [b_n_or;   results_2(aa).B_n_angle_fix; ];   
                  A_n_or = [A_n_or;  results_2(aa).A_n_dis;   ]; 
-                 b_n_or = [b_n_or;   results_2(aa).B_n_dis; ];        
+                 b_n_or = [b_n_or;   results_2(aa).B_n_dis; ];   
             end 
         end
  
@@ -156,7 +158,7 @@ for i_combine = 1:nu_combine
      optoption_1 = optimset('Display', 'off', 'TolFun', 1e-10);
      if (size(A_n_and,1)>0)
         if(flag_bound ==0)
-             [x, FVAL, EXITFLAG] = quadprog(H, f2, A_n_and, b_n_and, [], [], -alpha, alpha, [], optoption_1);
+            [x, FVAL, EXITFLAG] = quadprog(H, f2, A_n_and, b_n_and, [], [], -alpha, alpha, [], optoption_1);
         else
             [x, FVAL, EXITFLAG] = quadprog(H, f2, A_n_and, b_n_and, [], [], [], [], [], optoption_1);
         end        

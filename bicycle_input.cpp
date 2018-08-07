@@ -344,7 +344,7 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     CFunction cLinkModel_1( 7, dynamics ); 
     acadodata_f1 << cLinkModel_1(setc_is_1); 
 
-    OCP ocp1(mexinput0, mexinput1, 10);
+    OCP ocp1(mexinput0, mexinput1, 50);
     ocp1.minimizeMayerTerm(L);
     ocp1.subjectTo(acadodata_f1);
     ocp1.subjectTo(AT_START, xp_dot == mexinput2);
@@ -373,7 +373,6 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
 
 
     OptimizationAlgorithm algo1(ocp1);
-    algo1.set( KKT_TOLERANCE, 1.000000E-10 );
     returnValue returnvalue = algo1.solve();
 
     VariablesGrid out_states; 

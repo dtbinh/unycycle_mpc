@@ -12,7 +12,7 @@ function bicycle_sim(T)
 clc;
 close all;
 if nargin < 1
-    T = 10; 
+    T = 30; 
 end
 
 
@@ -67,42 +67,18 @@ end
 
 % geometric backstepping by Taeyoung Lee
 function [u] = virtual_Control(t, y, trajd)
-global scale  u_global; 
+global scale  u_global;
+global x_nom u_nom; 
 
-if scale==0
-    %commands
-    % rhat=[trajd(1);trajd(2);trajd(3)];
 
-    %sensed 
-    % x_feedback = [y(1);y(2);y(3)];
 
+if (scale==0)
+%run mpc 
     %time horizon: 
     horizon = 1; 
-
-    input = [t; y];
-
+    
     coef_.A = zeros(10,2);
     coef_.B = zeros(10,1);
-
-    % %using the m-file: 
-    % coef_ = cbf_seperate(y);   %single constraints 
-    % 
-    % % using the mex-file: (should run unicycle_c_seperate.m firstly)
-    % out = unicycle_input_RUN(t, t+horizon, y(1), y(2), y(3), y(4), ...
-    %     coef_(1), coef_(2), coef_(3), ... %row 1 
-    %     coef_(1), coef_(2), coef_(3), ... %row 2 
-    %     coef_(1), coef_(2), coef_(3), ... %row 3 
-    %     coef_(1), coef_(2), coef_(3), ... %row 4 
-    %     coef_(1), coef_(2), coef_(3), ...  %row 5 
-    %     coef_(1), coef_(2), coef_(3), ... %row 6 
-    %     coef_(1), coef_(2), coef_(3), ... %row 7
-    %     coef_(1), coef_(2), coef_(3), ... %row 8 
-    %     coef_(1), coef_(2), coef_(3), ... %row 9
-    %     coef_(1), coef_(2), coef_(3));
-
-    % only static obstacles: 
-    % coef_ = cbf_seperate_mult_constraints(y); 
-
     % can address dynamics obstacles: 
     coef_ = cbf_seperate_mult_dynamic_complex_constraints([y; t]); 
 
@@ -128,15 +104,46 @@ if scale==0
         if (out.CONVERGENCE_ACHIEVED ==1)
             u = out.CONTROLS(1,2:end)';   %the MPC control 
             u_global =u;
+            x_nom = out.STATES; 
+            u_nom = out.CONTROLS;
         else
             u = [0; -4];  %the MPC solver does not converge
             u_global =u;
+            x_nom = out.STATES; 
+            u_nom = out.CONTROLS;
         end
     end
-else 
-    
+end
+
+if (mod(scale, 20)==0)
+% closed loop control 
+    k =  0.1*[0, 0.1, 0.01, 0.01, 0.01, 0.0; 0.1, 0, 0, 0, 0.1, 0];
+    i_cur = floor(scale/20)+1; 
+    x_nom_cur = x_nom(i_cur,2:end-1)';
+    u_nom_cur = u_nom(i_cur,2:end)';
+    u = k*(x_nom_cur - y) + u_nom_cur;
+        
+%     if (coef_.C == 1)
+%         %the feasible control space is empty
+%         u = [0; -4]; 
+%     else    
+%         H= diag([1;1]);
+%         f2 = -2* u;  %the optimal goal is for the entire control
+%         optoption_1 = optimset('Display', 'off', 'TolFun', 1e-10);
+%         alpha=[1.0; 4];
+%         [x, FVAL, EXITFLAG] = quadprog(H, f2, coef_.A, coef_.B, [], [], -alpha, alpha, [], optoption_1);
+%         u = x; 
+%     end    
+        u_global = u;
+%     u = u_global;
+
+else     
     u = u_global;
 end
+
+%  u = [0;0];
+
+% scale = 2; 
 
 scale = scale+1;
 if (scale == 100)
@@ -220,6 +227,7 @@ dy = f_x + g_x*u;
 debug = 1;
 if debug == 1
     disp(['The current time is ', num2str(t)]);
+ 
 end
 % -----------------------------------------------
 

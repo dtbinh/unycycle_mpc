@@ -85,7 +85,7 @@ BEGIN_ACADO;                                % Always start with "BEGIN_ACADO".
     %parameters: 
  
  
-    ocp = acado.OCP(input1, input2, 10);    
+    ocp = acado.OCP(input1, input2, 50);    
     ocp.minimizeMayerTerm(L);  % minimizeLagrange is not yet implemented for matlab ode calls!
                                % but you can define another differential
                                % state to get the same effect (L)
@@ -165,7 +165,7 @@ BEGIN_ACADO;                                % Always start with "BEGIN_ACADO".
     % DO NOT USE EXACT HESSIAN WHEN LINKING TO MATLAB ODE
     % !!
     
-    algo.set( 'KKT_TOLERANCE', 1e-10);
+%     algo.set( 'KKT_TOLERANCE', 1e-4);
 
     
 END_ACADO;           % Always end with "END_ACADO".

@@ -12,7 +12,7 @@ ey= u(5);  %lateral position
 s = u(6);  %logitudinal position 
  
 %static obstacles: 
-no_ob = 1; 
+no_ob = 3; 
 
 global pos_ob_array_pre;
 pos_ob_array_pre = zeros(2,no_ob);
@@ -28,8 +28,8 @@ acc_ob_array = zeros(2,no_ob);
 %obstacles, but go to another side which is not between the
 %two obstacles. 
 pos_ob_array_pre(:,1) = [40+0*t; 0.0];
-% pos_ob_array_pre(:,2) = [500; -0.0];
-% pos_ob_array_pre(:,3) = [800; -0.1];
+pos_ob_array_pre(:,2) = [42; 0.8];
+pos_ob_array_pre(:,3) = [150; -0.1];
 % pos_ob_array_pre(:,4) = [800;  1.5];
 % pos_ob_array_pre(:,5) = [1000;  0.1];
 % pos_ob_array_pre(:,6) = [1200; -0.1];
@@ -39,7 +39,8 @@ pos_ob_array_pre(:,1) = [40+0*t; 0.0];
 % pos_ob_array_pre(:,10) = [1900; -0.1];
 
 vel_ob_array_pre(:,1) = [ 0; 0];
-% vel_ob_array_pre(:,2) = [0; 0];
+vel_ob_array_pre(:,2) = [0; 0];
+vel_ob_array_pre(:,3) = [0; 0];
 
 
 %the size of the output depends on the number of the obstacles and the
