@@ -4,7 +4,7 @@ function [t1,y1]=self_solverdynamics(ode, tspan, y0, options, current_hdl)
 % quad_3d_ode(t, y,  ctrl_hdl)
 % [t1, y1] = ode45(@quad_3d_ode, tspan, y0, options, current_hdl);
 
-dt=0.1;
+dt=0.001;
 
 n_state=length(y0);   %dimension of the states
 

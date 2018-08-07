@@ -10,6 +10,31 @@ P_sens = y1(:, [6,5]);
 P_com = P_sens;
 % P_com=reference(:,1:2);
 
+
+delta = u_ctrl(1,:);
+dot_y = y1(:,2);
+dot_x = y1(:,1);
+dot_psi = y1(:,3); 
+
+a = 1.41; 
+b = 1.576; 
+
+alpha_f= (dot_y+a*dot_psi)./dot_x - delta'; 
+alpha_r = (dot_y -b*dot_psi)./dot_x; 
+
+figure(100); 
+subplot(2,1,1);
+plot(t,alpha_f ),grid;
+ylabel('\alpha_f');
+title('slip ratios');
+% legend('P_c_o_m','P_s_e_n');
+
+subplot(2,1,2);
+plot(t,alpha_r ),grid;
+ylabel('\alpha_r');
+ xlabel('time(s)');
+
+
 len = length(t); 
 h_plot = zeros(len,1);
 
@@ -59,6 +84,12 @@ ylabel('\psi(degree)');
  figure(3);
  plot(t, h_plot); 
 ylabel('distance');
+ xlabel('time(s)');
+ 
+ 
+ figure(4); 
+  plot(t_ctrl, u_ctrl); 
+ylabel('control');
  xlabel('time(s)');
  
 

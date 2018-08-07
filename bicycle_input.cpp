@@ -354,6 +354,22 @@ void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[] )
     ocp1.subjectTo(AT_START, ey == mexinput6);
     ocp1.subjectTo(AT_START, s == mexinput7);
     ocp1.subjectTo(AT_START, L == 0.00000000000000000000e+00);
+    ocp1.subjectTo((-1.00000000000000000000e+00) <= delta_f <= 1.00000000000000000000e+00);
+    ocp1.subjectTo((-4.00000000000000000000e+00) <= a_x <= 4.00000000000000000000e+00);
+    ocp1.subjectTo(((1.40999999999999992006e+00*psi_dot+yp_dot)/xp_dot-delta_f) >= (-5.00000000000000000000e-01));
+    ocp1.subjectTo(((1.40999999999999992006e+00*psi_dot+yp_dot)/xp_dot-delta_f) <= 5.00000000000000000000e-01);
+    ocp1.subjectTo((-1.57600000000000006750e+00*psi_dot+yp_dot)/xp_dot >= (-5.00000000000000000000e-01));
+    ocp1.subjectTo((-1.57600000000000006750e+00*psi_dot+yp_dot)/xp_dot <= 5.00000000000000000000e-01);
+    ocp1.subjectTo((a_x*mexinput9+delta_f*mexinput8-mexinput10) <= 0.00000000000000000000e+00);
+    ocp1.subjectTo((a_x*mexinput12+delta_f*mexinput11-mexinput13) <= 0.00000000000000000000e+00);
+    ocp1.subjectTo((a_x*mexinput15+delta_f*mexinput14-mexinput16) <= 0.00000000000000000000e+00);
+    ocp1.subjectTo((a_x*mexinput18+delta_f*mexinput17-mexinput19) <= 0.00000000000000000000e+00);
+    ocp1.subjectTo((a_x*mexinput21+delta_f*mexinput20-mexinput22) <= 0.00000000000000000000e+00);
+    ocp1.subjectTo((a_x*mexinput24+delta_f*mexinput23-mexinput25) <= 0.00000000000000000000e+00);
+    ocp1.subjectTo((a_x*mexinput27+delta_f*mexinput26-mexinput28) <= 0.00000000000000000000e+00);
+    ocp1.subjectTo((a_x*mexinput30+delta_f*mexinput29-mexinput31) <= 0.00000000000000000000e+00);
+    ocp1.subjectTo((a_x*mexinput33+delta_f*mexinput32-mexinput34) <= 0.00000000000000000000e+00);
+    ocp1.subjectTo((a_x*mexinput36+delta_f*mexinput35-mexinput37) <= 0.00000000000000000000e+00);
 
 
     OptimizationAlgorithm algo1(ocp1);
