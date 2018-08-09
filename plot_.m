@@ -55,7 +55,9 @@ axis equal;
 
 global pos_ob_array_pre;
 for i=1:size(pos_ob_array_pre,2)
-    plot(pos_ob_array_pre(1,i), pos_ob_array_pre(2,i), '*r');
+    plot(pos_ob_array_pre(1,i), pos_ob_array_pre(2,i), '*r'); hold on; 
+    Ds =1 ;
+    circle(Ds,pos_ob_array_pre(1,i), pos_ob_array_pre(2,i)); hold on; 
 end
  
 figure(2);   

@@ -12,7 +12,7 @@ function bicycle_sim(T)
 clc;
 close all;
 if nargin < 1
-    T = 30; 
+    T = 7; 
 end
 
 
@@ -35,7 +35,7 @@ ctrl_hdl_str = func2str(current_hdl);
 % ddr0=[0;0;0];
 % dddr0=[0;0;0];
 
-y0=[9.8;0;0;0.1; 0 ; -0];
+y0=[9.8;0;0; 0.0; 0 ; -0];
 
 global t_ctrl; 
 global u_ctrl; 
@@ -59,6 +59,9 @@ tspan = [0 T];
 
 % save all the data into .mat file  
 save('sim_data.mat');
+global name;  
+global pos_ob_array_pre;
+save(name);
 disp('Data successfully stored!');
 
 
@@ -70,22 +73,21 @@ function [u] = virtual_Control(t, y, trajd)
 global scale  u_global;
 global x_nom u_nom; 
 
-
-
 if (scale==0)
 %run mpc 
     %time horizon: 
-    horizon = 1; 
+    horizon = 2; 
     
     coef_.A = zeros(10,2);
     coef_.B = zeros(10,1);
     % can address dynamics obstacles: 
-    coef_ = cbf_seperate_mult_dynamic_complex_constraints([y; t]); 
-
-    if (coef_.C == 1)
-        %the feasible control space is empty
-        u = [0; -4]; 
-    else
+%     coef_ = cbf_seperate_mult_dynamic_complex_constraints([y; t]); 
+% 
+%     if (coef_.C == 1)
+%         %the feasible control space is empty
+%         u = [0; -4]; 
+%         u_global =u;
+%     else
     %     using the mex-file: (should run unicycle_c_seperate.m firstly)
         out = bicycle_input_RUN(t, t+horizon, ...
             y(1), y(2), y(3), y(4), y(5), y(6),  ...
@@ -112,41 +114,43 @@ if (scale==0)
             x_nom = out.STATES; 
             u_nom = out.CONTROLS;
         end
-    end
+%     end
+else
+	u = u_global;
 end
 
-if (mod(scale, 20)==0)
-% closed loop control 
-    k =  0.1*[0, 0.1, 0.01, 0.01, 0.01, 0.0; 0.1, 0, 0, 0, 0.1, 0];
-    i_cur = floor(scale/20)+1; 
-    x_nom_cur = x_nom(i_cur,2:end-1)';
-    u_nom_cur = u_nom(i_cur,2:end)';
-    u = k*(x_nom_cur - y) + u_nom_cur;
-        
-%     if (coef_.C == 1)
-%         %the feasible control space is empty
-%         u = [0; -4]; 
-%     else    
-%         H= diag([1;1]);
-%         f2 = -2* u;  %the optimal goal is for the entire control
-%         optoption_1 = optimset('Display', 'off', 'TolFun', 1e-10);
-%         alpha=[1.0; 4];
-%         [x, FVAL, EXITFLAG] = quadprog(H, f2, coef_.A, coef_.B, [], [], -alpha, alpha, [], optoption_1);
-%         u = x; 
-%     end    
-        u_global = u;
+% if (mod(scale, 20)==0)
+% % closed loop control 
+%     k =  0.1*[0, 0.1, 0.01, 0.01, 0.01, 0.0; 0.1, 0, 0, 0, 0.1, 0];
+%     i_cur = floor(scale/20)+1; 
+%     x_nom_cur = x_nom(i_cur,2:end-1)';
+%     u_nom_cur = u_nom(i_cur,2:end)';
+%     u = k*(x_nom_cur - y) + u_nom_cur;
+%         
+% %     if (coef_.C == 1)
+% %         %the feasible control space is empty
+% %         u = [0; -4]; 
+% %     else    
+% %         H= diag([1;1]);
+% %         f2 = -2* u;  %the optimal goal is for the entire control
+% %         optoption_1 = optimset('Display', 'off', 'TolFun', 1e-10);
+% %         alpha=[1.0; 4];
+% %         [x, FVAL, EXITFLAG] = quadprog(H, f2, coef_.A, coef_.B, [], [], -alpha, alpha, [], optoption_1);
+% %         u = x; 
+% %     end    
+%         u_global = u;
+% %     u = u_global;
+% 
+% else     
 %     u = u_global;
-
-else     
-    u = u_global;
-end
+% end
 
 %  u = [0;0];
 
 % scale = 2; 
 
 scale = scale+1;
-if (scale == 100)
+if (scale == 10)
     scale = 0;
 end
 end
@@ -180,7 +184,7 @@ u = feval(ctrl_hdl, t, y, trajd);
 delta_f = u(1);   %steering angle 
 a_x = u(2);    %acc 
 
-if (y(1)<= 0)
+if (y(1)<= 1e-4)
     y(1) = 1e-4;
 end 
 
@@ -221,6 +225,10 @@ g_x = [0, 1; ...
     0, 0];
 
 dy = f_x + g_x*u;
+
+if (y(1)<= 1e-4)
+    dy = zeros(6,1); 
+end 
 
 % -----------------------------------------------
 % check simulation time for stability property

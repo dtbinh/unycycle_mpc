@@ -11,4 +11,6 @@ beta_2 = zeros(100,1); %maximum 100 obstacles;
 global A_n b_n;
 global results; 
 global results_2; 
-global output_safety; 
+global output_safety;
+
+

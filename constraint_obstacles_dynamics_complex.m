@@ -12,10 +12,10 @@ ey= u(5);  %lateral position
 s = u(6);  %logitudinal position 
  
 %static obstacles: 
-no_ob = 3; 
+no_ob = 5; 
 
 global pos_ob_array_pre;
-pos_ob_array_pre = zeros(2,no_ob);
+% pos_ob_array_pre = zeros(2,no_ob);
 vel_ob_array_pre = zeros(2,no_ob);
 acc_ob_array = zeros(2,no_ob);
 
@@ -27,11 +27,18 @@ acc_ob_array = zeros(2,no_ob);
 %the solver will not let the vehicle go to the gap between the two
 %obstacles, but go to another side which is not between the
 %two obstacles. 
-pos_ob_array_pre(:,1) = [40+0*t; 0.0];
-pos_ob_array_pre(:,2) = [42; 0.8];
-pos_ob_array_pre(:,3) = [150; -0.1];
+% pos_ob_array_pre(:,1) = [50+0*t; 0.0];
+% pos_ob_array_pre(:,2) = [40;3];
+% pos_ob_array_pre(:,3) = [150; -0.1];
 % pos_ob_array_pre(:,4) = [800;  1.5];
 % pos_ob_array_pre(:,5) = [1000;  0.1];
+
+% pos_ob_array_pre(:,1) = [50; -1.2];
+% pos_ob_array_pre(:,2) = [50; 1.2];
+% pos_ob_array_pre(:,3) = [60.8; -2.8];
+% pos_ob_array_pre(:,4) = [60.8;  0.0];
+% pos_ob_array_pre(:,5) = [60.8;  2.8];
+
 % pos_ob_array_pre(:,6) = [1200; -0.1];
 % pos_ob_array_pre(:,7) = [1400;  0.1];
 % pos_ob_array_pre(:,8) = [1400; -0.5];
@@ -41,6 +48,8 @@ pos_ob_array_pre(:,3) = [150; -0.1];
 vel_ob_array_pre(:,1) = [ 0; 0];
 vel_ob_array_pre(:,2) = [0; 0];
 vel_ob_array_pre(:,3) = [0; 0];
+vel_ob_array_pre(:,4) = [0; 0];
+vel_ob_array_pre(:,5) = [0; 0];
 
 
 %the size of the output depends on the number of the obstacles and the
@@ -52,7 +61,7 @@ dis_shresh = 600;
 pos_ob_array = [];
 vel_ob_array =[];
 for i = 1:no_ob 
-    if (pos_ob_array_pre(1,i)>=(s-10)) && (abs(s-pos_ob_array_pre(1,i))<=dis_shresh)
+    if (pos_ob_array_pre(1,i)>=(s-0.0)) && (abs(s-pos_ob_array_pre(1,i))<=dis_shresh)
         pos_ob_array = [pos_ob_array, pos_ob_array_pre(:,i)];
         vel_ob_array = [vel_ob_array, vel_ob_array_pre(:,i)];
     end
@@ -76,6 +85,40 @@ if (no_ob >=2)
     end
 end
 
+
+%%  for the road side constraints: 
+ey_pos = 3.7;
+ey_neg = -3.7; 
+
+a_m = 4;  %maximum acc 
+
+%constants: 
+a = 1.41; 
+b = 1.576; 
+mu =0.5; 
+Fzf = 21940/2; 
+Fzr = 21940/2; 
+cf = 65000; 
+cr = 65000; 
+m = 2194; 
+Iz = 4770; 
+psi_dot_com = 0;
+p =Iz/(m*b);
+
+h_sid_pos = ey_pos - ey - (yp_dot*cos(epsi) + xp_dot*sin(epsi))^2/(2*a_m) -0.1;
+L_f_h_sid_pos = ((yp_dot*cos(epsi) + xp_dot*sin(epsi))*(2*cf*yp_dot*cos(epsi) + 2*cr*yp_dot*cos(epsi) - a_m*m*xp_dot + 2*a*cf*psi_dot*cos(epsi) - 2*b*cr*psi_dot*cos(epsi) + m*psi_dot_com*xp_dot^2*cos(epsi) - m*psi_dot_com*xp_dot*yp_dot*sin(epsi)))/(a_m*m*xp_dot); 
+L_g_h_sid_pos = [ -(2*cf*cos(epsi)*(yp_dot*cos(epsi) + xp_dot*sin(epsi)))/(a_m*m), -(sin(epsi)*(yp_dot*cos(epsi) + xp_dot*sin(epsi)))/a_m];
+ 
+h_sid_neg = ey - ey_neg - (yp_dot*cos(epsi) + xp_dot*sin(epsi))^2/(2*a_m) -0.1;
+L_f_h_sid_neg = ((yp_dot*cos(epsi) + xp_dot*sin(epsi))*(2*cf*yp_dot*cos(epsi) + 2*cr*yp_dot*cos(epsi) + a_m*m*xp_dot + 2*a*cf*psi_dot*cos(epsi) - 2*b*cr*psi_dot*cos(epsi) + m*psi_dot_com*xp_dot^2*cos(epsi) - m*psi_dot_com*xp_dot*yp_dot*sin(epsi)))/(a_m*m*xp_dot);
+L_g_h_sid_neg = [ -(2*cf*cos(epsi)*(yp_dot*cos(epsi) + xp_dot*sin(epsi)))/(a_m*m), -(sin(epsi)*(yp_dot*cos(epsi) + xp_dot*sin(epsi)))/a_m];
+ 
+A_n_side_pos = -L_g_h_sid_pos;
+b_n_side_pos = L_f_h_sid_pos +5*h_sid_pos;
+A_n_side_neg= -L_g_h_sid_neg;
+b_n_side_neg = L_f_h_sid_neg +5*h_sid_neg;
+
+
 for i_ob =1:no_ob
 %% states of the vehicle and each obstacle:
     pos_ob = pos_ob_array(:,i_ob);  
@@ -94,26 +137,16 @@ for i_ob =1:no_ob
     rel_vel = v_vehicle - [vel_ob_x; vel_ob_y]; %assume epsi is small, 
     
 %     Ds = 1.2;  %the radius of obstacle 
-    a_m = 4;  %maximum acc 
+
     
-    %constants: 
-    a = 1.41; 
-    b = 1.576; 
-    mu =0.5; 
-    Fzf = 21940/2; 
-    Fzr = 21940/2; 
-    cf = 65000; 
-    cr = 65000; 
-    m = 2194; 
-    Iz = 4770; 
-    psi_dot_com = 0;
-    p =Iz/(m*b);
+    
+
         
  %% August 3th, angle constraint for obstacles, 
         %constraint 1, angle constraint, test:  
     %notice there may be virtual number, nan, of inf, you should aoid these
     %conditions: 
-    Ds = 1.2;
+    Ds = 1.1;
     cos_rel_ang = (-rel_pos.'*rel_vel) /norm(rel_pos)/norm(rel_vel); 
     
     if (cos_rel_ang>=-0.99) 
@@ -140,6 +173,13 @@ for i_ob =1:no_ob
         if (abs(epsi) <= 1e-5)
             epsi = sign(epsi)*1e-5;
         end
+        
+        if (pos_ob_y == 0)
+            pos_ob_y =  1e-4;
+        end
+        if (epsi == 0 )
+            epsi =  1e-5;
+        end
 
         %very important, due to calculation errors, there maybe sometimes the
         %results are virtual, should be treated carefully. 
@@ -165,7 +205,7 @@ for i_ob =1:no_ob
         L_t_h_ang=  L_t_h_ang_part1   -asin_dot*ratio_pt;
 
         A_n_angle_fix = [-L_g_h_ang, 0];
-        b_n_angle_fix = L_f_h_ang + L_t_h_ang +3*h_ang;
+        b_n_angle_fix = L_f_h_ang + L_t_h_ang +35*h_ang^3;
     elseif (cos_rel_ang<=-0.99)
         h_ang = 3; 
         A_n_angle_fix = [0, 0];
@@ -176,12 +216,20 @@ for i_ob =1:no_ob
     %notice there may be virtual number, nan, of inf, you should aoid these
     %conditions: 
     Ds = 1;    
+    alert = 0;
     dis_maxacc_sqr = 2*a_m*(norm(rel_pos)-Ds); 
-    if (dis_maxacc_sqr<=0)
+    if (dis_maxacc_sqr<= 1e-4)
         dis_maxacc_sqr = 1e-4;
+        alert = 1; 
     end
     h_vel  = sqrt(dis_maxacc_sqr) + rel_pos'/norm(rel_pos)*rel_vel; 
-
+    
+    if (h_vel<= 0.1)
+%         dis_maxacc_sqr = 1e-4;
+%         alert = 1; 
+    end
+    
+ 
     %very important, if this is zero, may make the qp infeasible due to the
     %coefficient matrix be zeros, but the right matrix is negative 
     %sometimes, it may be NaN of inf, so this constraint actually do not work
@@ -211,7 +259,7 @@ for i_ob =1:no_ob
     L_t_h_vel= temp_h_vel* L_t_h_norm+L_t_h_vel;
 
     A_n_vel = -L_g_h_vel;
-    b_n_vel = L_f_h_vel + L_t_h_vel +3*h_vel;
+    b_n_vel = L_f_h_vel + L_t_h_vel +50*h_vel;
 
 %% August, 3rd, constraint 3, velocity direction constraint for moving obstacles, test:  
 
@@ -226,7 +274,7 @@ for i_ob =1:no_ob
     elseif (v_vehicle(1)*vel_ob(1)<0)
         rel_pos_vert =  [-rel_pos(2); rel_pos(1)];  %normal to rel_pos
         % h_move_angle = -rel_pos_vert'* v_vehicle* rel_pos_vert'*vel_ob/norm(rel_pos_vert)/norm(rel_pos_vert) ;
-        h_move_angle = -rel_pos_vert'* v_vehicle* rel_pos_vert'*vel_ob  ;
+        h_move_angle = -rel_pos_vert'* v_vehicle* rel_pos_vert'*vel_ob;
         %very important, if this is zero, may make the qp infeasible due to the
         %coefficient matrix be zeros, but the right matrix is negative 
         %sometimes, it may be NaN of inf, so this constraint actually do not work
@@ -272,7 +320,13 @@ for i_ob =1:no_ob
     out(i_ob).h_dis = h_vel; 
     out(i_ob).A_n_dis = A_n_vel; 
     out(i_ob).B_n_dis = b_n_vel; 
-        
+    out(i_ob).h_sid_pos = h_sid_pos;
+    out(i_ob).A_n_side_pos = A_n_side_pos;
+    out(i_ob).b_n_side_pos = b_n_side_pos;
+    out(i_ob).h_sid_pos = h_sid_neg;
+    out(i_ob).A_n_side_neg = A_n_side_neg;
+    out(i_ob).b_n_side_neg = b_n_side_neg;
+    out(i_ob).alert = alert; 
     %test:
 %     out(i_ob).h_angle_moving= NaN;  %cannot be 0?
 %     out(i_ob).A_n_angle_moving  = A_n_anglemoving; 

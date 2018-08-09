@@ -136,7 +136,7 @@ a_x = u(2);    %acc
     f[3] =  psi_dot - psi_dot_com;    // dot epsi
     f[4] =  yp_dot + xp_dot*epsi;    // dot ey 
     f[5] =  xp_dot ;     // dot s 
-    f[6] =  2.1*delta_x+  20*delta_f*delta_f + 20*a_x*a_x;       //dot(L)
+    f[6] =  0.1*delta_x+  20*delta_f*delta_f + 20*a_x*a_x;       //dot(L)
     //notice the gain in the cost functions should be carefully tunned. 
     
 }

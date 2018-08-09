@@ -46,23 +46,24 @@ no_ob = size(results_2,2);
 global beta_2;   %initial value is 0; 
 
 Ds0 = 1;
-Ds_angle = 1.2; 
+Ds_angle = 1.1; 
 
 for i_ob = 1:no_ob
     %justify when jump: 
 %     Ds = 2; 
     theta_d_big = asin((Ds_angle)/results_2(i_ob).norm_relpos) - asin( Ds0 /results_2(i_ob).norm_relpos);
-%     theta_d_big =0.1;
-    theta_d_small = theta_d_big/2000000000; 
-%     theta_d_small = -0.001; 
+%     theta_d_big =0.01;
+    theta_d_small = theta_d_big/2000; 
+%     theta_d_small =  0.001; 
     if (beta_2(i_ob) == 0 ) && (results_2(i_ob).h_angle_fix > -theta_d_small)
         beta_2(i_ob) = 1;
-    elseif (beta_2(i_ob) == 1 ) && (results_2(i_ob).h_angle_fix <=  -theta_d_big/10000000)
+    elseif (beta_2(i_ob) == 1 ) && (results_2(i_ob).h_angle_fix <=  -theta_d_big/500)
         beta_2(i_ob) = 0;
     end
 end
   
 shreshold_movingangle = 1e-20; 
+out.C=0;
 
 %the variable determine which CBF is active now 
 slack_mult = zeros(2,no_ob);
@@ -70,6 +71,11 @@ slack_mult = zeros(2,no_ob);
 nu_combine =  1; 
 order = [];
 for aa = 1:no_ob
+    
+    if(results_2(aa).alert==1)
+        out.C=1;
+    end
+    
     if(beta_2(aa)==1) && (results_2(aa).h_angle_moving<=shreshold_movingangle)
 %         Ds = 2; 
         theta_d_big = asin((Ds_angle)/results_2(aa).norm_relpos) - asin( Ds0 /results_2(aa).norm_relpos);
@@ -77,7 +83,7 @@ for aa = 1:no_ob
         theta_d_small = theta_d_big/20;
         %if does not point to the obstacle:
     
-        if  (results_2(aa).h_angle_fix>= -theta_d_big/10000000)   %pointing constraint
+        if  (results_2(aa).h_angle_fix>= -theta_d_big/500)   %pointing constraint
             slack_mult(1, no_ob) = 1;   %active
         else
             slack_mult(1, no_ob) = 0;
@@ -121,8 +127,8 @@ value_min = 100000000;
 x_min = [0;0];
 
 for i_combine = 1:nu_combine
-    A_n_and = [];
-    b_n_and = [];
+    A_n_and = [results_2(aa).A_n_side_pos; results_2(aa).A_n_side_neg];
+    b_n_and = [results_2(aa).b_n_side_pos; results_2(aa).b_n_side_neg];
     A_n_or = [];
     b_n_or = [];
     
@@ -155,7 +161,7 @@ for i_combine = 1:nu_combine
      %obstacles solvable 
      H= diag([1;1]);
      f2 = -2* u_nom;  %the optimal goal is for the entire control
-     optoption_1 = optimset('Display', 'off', 'TolFun', 1e-10);
+     optoption_1 = optimset('Display', 'off', 'TolFun', 1e-6);
      if (size(A_n_and,1)>0)
         if(flag_bound ==0)
             [x, FVAL, EXITFLAG] = quadprog(H, f2, A_n_and, b_n_and, [], [], -alpha, alpha, [], optoption_1);
@@ -165,8 +171,8 @@ for i_combine = 1:nu_combine
 %         delta_just = width_control(A_n_and, b_n_and);   %calucate the width of the feasible control  
         if (EXITFLAG<0)  
             %qp  has no solution 
-            A_n_and = [];
-            b_n_and = [];
+            A_n_and = [results_2(aa).A_n_side_pos; results_2(aa).A_n_side_neg];
+            b_n_and = [results_2(aa).b_n_side_pos; results_2(aa).b_n_side_neg];
             for aa = 1:no_ob
                 if (beta_2(aa) == 0 ) && (aa == 1)
         % %             if angle CBF for multiple obstacles does not solvable,
@@ -230,7 +236,7 @@ end
 %not affect the solution 
 out.A = zeros(10,2);
 out.B = 100*ones(10,1);   
-out.C=0;
+
 % % the output: 
 if (value_min~=100000000) 
 % if (max_delta_lb<0)
