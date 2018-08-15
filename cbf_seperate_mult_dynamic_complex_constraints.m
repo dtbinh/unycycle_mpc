@@ -45,12 +45,16 @@ results_2 = constraint_obstacles_dynamics_complex([xp_dot; yp_dot; psi_dot; epsi
 no_ob = size(results_2,2); 
 global beta_2;   %initial value is 0; 
 
-Ds0 = 1;
-Ds_angle = 1.1; 
-
 for i_ob = 1:no_ob
     %justify when jump: 
 %     Ds = 2; 
+
+    Ds0 = 1;
+    Ds_angle = 1.1; 
+
+    Ds0 = results_2(i_ob).radius;
+    Ds_angle = results_2(i_ob).radius+0.1; 
+    
     theta_d_big = asin((Ds_angle)/results_2(i_ob).norm_relpos) - asin( Ds0 /results_2(i_ob).norm_relpos);
 %     theta_d_big =0.01;
     theta_d_small = theta_d_big/2000; 
@@ -78,6 +82,9 @@ for aa = 1:no_ob
     
     if(beta_2(aa)==1) && (results_2(aa).h_angle_moving<=shreshold_movingangle)
 %         Ds = 2; 
+        Ds0 = results_2(aa).radius;
+        Ds_angle = results_2(aa).radius+0.1;
+        
         theta_d_big = asin((Ds_angle)/results_2(aa).norm_relpos) - asin( Ds0 /results_2(aa).norm_relpos);
 %         theta_d_big = 0.1;
         theta_d_small = theta_d_big/20;
@@ -159,12 +166,17 @@ for i_combine = 1:nu_combine
    
      %solve QP at the end, see if the angle constraints for multiple
      %obstacles solvable 
-     H= diag([1;1]);
-     f2 = -2* u_nom;  %the optimal goal is for the entire control
+     H= diag([1;1; 1]);
+     ck = 1;
+     f2 = -2* [u_nom; ck*1];  %the optimal goal is for the entire control
+%      H= diag([1;1]);
+%      ck = 1;
+%      f2 = -2* [u_nom;];  %the optimal goal is for the entire control
      optoption_1 = optimset('Display', 'off', 'TolFun', 1e-6);
      if (size(A_n_and,1)>0)
         if(flag_bound ==0)
-            [x, FVAL, EXITFLAG] = quadprog(H, f2, A_n_and, b_n_and, [], [], -alpha, alpha, [], optoption_1);
+            [x, FVAL, EXITFLAG] = quadprog(H, f2, A_n_and, b_n_and, [], [], [-alpha; 1], [alpha; inf], [], optoption_1);
+%             [x, FVAL, EXITFLAG] = quadprog(H, f2, A_n_and, b_n_and, [], [], [-alpha; ], [alpha; ], [], optoption_1);
         else
             [x, FVAL, EXITFLAG] = quadprog(H, f2, A_n_and, b_n_and, [], [], [], [], [], optoption_1);
         end        
@@ -206,7 +218,8 @@ for i_combine = 1:nu_combine
         %if the QP is solvable, then solve it 
         if(flag_bound ==0)
 %             [x, FVAL, EXITFLAG] = quadprog(H, f2, A_n, b_n, [], [], -alpha-u_nom, alpha-u_nom, [], optoption_1);
-            [x, FVAL, EXITFLAG] = quadprog(H, f2, A_n, b_n, [], [], -alpha, alpha, [], optoption_1);
+            [x, FVAL, EXITFLAG] = quadprog(H, f2, A_n, b_n, [], [], [-alpha; 1], [alpha; inf], [], optoption_1);
+%             [x, FVAL, EXITFLAG] = quadprog(H, f2, A_n, b_n, [], [], [-alpha], [alpha], [], optoption_1);
         else
             [x, FVAL, EXITFLAG] = quadprog(H, f2, A_n, b_n, [], [], [], [], [], optoption_1);
         end
@@ -217,9 +230,9 @@ for i_combine = 1:nu_combine
 
         if (FVAL < value_min)
             value_min = FVAL; %update
-            x_min = x; 
-            A_min = A_n;  %the coefficient 
-            b_min = b_n;  %the coefficient 
+            x_min = x(1:2); 
+            A_min = A_n(:, 1:2);  %the coefficient 
+            b_min = b_n - A_n(:, 3)*x(3);  %the coefficient 
         end   
  
 %     end

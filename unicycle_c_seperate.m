@@ -85,7 +85,7 @@ BEGIN_ACADO;                                % Always start with "BEGIN_ACADO".
     %parameters: 
  
  
-    ocp = acado.OCP(input1, input2, 20);    
+    ocp = acado.OCP(input1, input2, 50);    
     ocp.minimizeMayerTerm(L);  % minimizeLagrange is not yet implemented for matlab ode calls!
                                % but you can define another differential
                                % state to get the same effect (L)
@@ -125,38 +125,57 @@ BEGIN_ACADO;                                % Always start with "BEGIN_ACADO".
     ocp.subjectTo(  (yp_dot -b *psi_dot)/xp_dot >= -0.5 );
     ocp.subjectTo(  (yp_dot -b*psi_dot)/xp_dot <= 0.5 );
 
-
-    
 %CBF constraints: 
 %very important for this problem, because there may be singular 
 %sometimes, this constant should be big enough, in order to let the solver
 %works 
 
 %% if do not use CBF to generate constraints, uncomment the following: 
-    global pos_ob_array_pre;
-    ocp.subjectTo(  sqrt((s - pos_ob_array_pre(1,1))^2  + (ey + pos_ob_array_pre(2,1))^2)  -1  >= 0); 
-    ocp.subjectTo(  sqrt((s - pos_ob_array_pre(1,2))^2  + (ey + pos_ob_array_pre(2,2))^2)  -1  >= 0); 
-    ocp.subjectTo(  sqrt((s - pos_ob_array_pre(1,3))^2  + (ey + pos_ob_array_pre(2,3))^2)  -1  >= 0); 
-    ocp.subjectTo(  sqrt((s - pos_ob_array_pre(1,4))^2  + (ey + pos_ob_array_pre(2,4))^2)  -1  >= 0); 
-    ocp.subjectTo(  sqrt((s - pos_ob_array_pre(1,5))^2  + (ey + pos_ob_array_pre(2,5))^2)  -1  >= 0); 
+    global pos_ob_array_pre radius_pre;
+    global no_ob;
+    global flag_mode; 
+    if(flag_mode == 2)  %MPC only 
+        for i=1:no_ob
+            ocp.subjectTo(  sqrt((s - pos_ob_array_pre(1,i))^2  + (ey - pos_ob_array_pre(2,i))^2) ...
+                - (radius_pre(no_ob) + 0.1) >= 0); 
+        end
+    elseif(flag_mode == 1)  %cbf and mpc
+        for i=1:no_ob
+            ocp.subjectTo(  sqrt((s - pos_ob_array_pre(1,i))^2  + (ey - pos_ob_array_pre(2,i))^2) ...
+                - (radius_pre(no_ob) + 0.0) >= 0); 
+        end
+    end
+        
+            
+%     ocp.subjectTo(  sqrt((s - pos_ob_array_pre(1,1))^2  + (ey - pos_ob_array_pre(2,1))^2)  -1  >= 0); 
+%     ocp.subjectTo(  sqrt((s - pos_ob_array_pre(1,2))^2  + (ey - pos_ob_array_pre(2,2))^2)  -1  >= 0); 
+%     ocp.subjectTo(  sqrt((s - pos_ob_array_pre(1,3))^2  + (ey -pos_ob_array_pre(2,3))^2)  -1  >= 0); 
+%     ocp.subjectTo(  sqrt((s - pos_ob_array_pre(1,4))^2  + (ey - pos_ob_array_pre(2,4))^2)  -1  >= 0); 
+%     ocp.subjectTo(  sqrt((s - pos_ob_array_pre(1,5))^2  + (ey - pos_ob_array_pre(2,5))^2)  -1  >= 0); 
     
 %     ocp.subjectTo(  sqrt((s - 50)^2  + (ey- 1.2)^2)  -1  >= 0); 
 %     ocp.subjectTo(  sqrt((s - 60.8)^2  + (ey + 2.8)^2)  -1  >= 0); 
 %     ocp.subjectTo(  sqrt((s - 60.8)^2  + (ey - 0.0)^2)  -1  >= 0); 
 %     ocp.subjectTo(  sqrt((s - 60.8)^2  + (ey - 2.8)^2)  -1  >= 0);       
-    ocp.subjectTo(  -3.7<= ey <= 3.7); 
+%     ocp.subjectTo(  -3.7<= ey <= 3.7); 
  
  %% if use CBF generate constraints, uncomment the following: 
-%      ocp.subjectTo(  coe_cbfqp_a11*delta_f + coe_cbfqp_a12*a_x -coe_cbfqp_b1  <= 0 ); 
-%      ocp.subjectTo(  coe_cbfqp_a21*delta_f + coe_cbfqp_a22*a_x -coe_cbfqp_b2  <= 0 ); 
-%      ocp.subjectTo(  coe_cbfqp_a31*delta_f + coe_cbfqp_a32*a_x -coe_cbfqp_b3  <= 0 ); 
-%      ocp.subjectTo(  coe_cbfqp_a41*delta_f + coe_cbfqp_a42*a_x -coe_cbfqp_b4  <= 0 ); 
-%      ocp.subjectTo(  coe_cbfqp_a51*delta_f + coe_cbfqp_a52*a_x -coe_cbfqp_b5  <= 0 ); 
-%      ocp.subjectTo(  coe_cbfqp_a61*delta_f + coe_cbfqp_a62*a_x -coe_cbfqp_b6  <= 0 ); 
-%      ocp.subjectTo(  coe_cbfqp_a71*delta_f + coe_cbfqp_a72*a_x -coe_cbfqp_b7  <= 0 ); 
-%      ocp.subjectTo(  coe_cbfqp_a81*delta_f + coe_cbfqp_a82*a_x -coe_cbfqp_b8  <= 0 ); 
-%      ocp.subjectTo(  coe_cbfqp_a91*delta_f + coe_cbfqp_a92*a_x -coe_cbfqp_b9  <= 0 ); 
-%      ocp.subjectTo(  coe_cbfqp_a101*delta_f + coe_cbfqp_a102*a_x -coe_cbfqp_b10  <= 0 ); 
+ 
+     
+    
+    %mpc and cbf
+     if(flag_mode == 1)
+         ocp.subjectTo(  coe_cbfqp_a11*delta_f + coe_cbfqp_a12*a_x -coe_cbfqp_b1  <= 0 ); 
+         ocp.subjectTo(  coe_cbfqp_a21*delta_f + coe_cbfqp_a22*a_x -coe_cbfqp_b2  <= 0 ); 
+         ocp.subjectTo(  coe_cbfqp_a31*delta_f + coe_cbfqp_a32*a_x -coe_cbfqp_b3  <= 0 ); 
+         ocp.subjectTo(  coe_cbfqp_a41*delta_f + coe_cbfqp_a42*a_x -coe_cbfqp_b4  <= 0 ); 
+         ocp.subjectTo(  coe_cbfqp_a51*delta_f + coe_cbfqp_a52*a_x -coe_cbfqp_b5  <= 0 ); 
+         ocp.subjectTo(  coe_cbfqp_a61*delta_f + coe_cbfqp_a62*a_x -coe_cbfqp_b6  <= 0 ); 
+         ocp.subjectTo(  coe_cbfqp_a71*delta_f + coe_cbfqp_a72*a_x -coe_cbfqp_b7  <= 0 ); 
+         ocp.subjectTo(  coe_cbfqp_a81*delta_f + coe_cbfqp_a82*a_x -coe_cbfqp_b8  <= 0 ); 
+         ocp.subjectTo(  coe_cbfqp_a91*delta_f + coe_cbfqp_a92*a_x -coe_cbfqp_b9  <= 0 ); 
+         ocp.subjectTo(  coe_cbfqp_a101*delta_f + coe_cbfqp_a102*a_x -coe_cbfqp_b10  <= 0 ); 
+     end
 
     algo = acado.OptimizationAlgorithm(ocp);
     

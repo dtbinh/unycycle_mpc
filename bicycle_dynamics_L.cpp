@@ -118,16 +118,16 @@ a_x = u(2);    %acc
     double delta_x = 20*(s-ref[0])* (s-ref[0]) +  30*(ey -ref[1])* (ey-ref[1]) + 2*(xp_dot-ref[2])* (xp_dot-ref[2]) + 2*(epsi-ref[3])* (epsi-ref[3])
                      + 0.2*(yp_dot-ref[4])* (yp_dot-ref[4]) + 2*(psi_dot-ref[5])* (psi_dot-ref[5]);
     
-    /*
+     /*
     f[0] = yp_dot*psi_dot + a_x;   //dot xp_dot
     f[1] =  -2*(cf+cr)/(m*xp_dot)*yp_dot-2*(a*cf-b*cr)/m/xp_dot*psi_dot-xp_dot*psi_dot + 2*cf/m*delta_f;   // dot yp_dot
     f[2] =  -2*(a*cf-b*cr)/Iz/xp_dot*yp_dot-2*(a*a*cf+b*b*cr)/Iz/xp_dot*psi_dot + 2*a*cf/Iz*delta_f;   //dot  psi_dot
     f[3] =  psi_dot - psi_dot_com;    // dot epsi
     f[4] =  yp_dot*cos(epsi) + xp_dot*sin(epsi);    // dot ey 
-    f[5] =  xp_dot*cos(epsi)-yp_dot*cos(epsi);     // dot s 
-    f[6] =  0.02*delta_x+  10*delta_f*delta_f + 10*a_x*a_x;       //dot(L)
+    f[5] =  xp_dot*cos(epsi)-yp_dot*sin(epsi);     // dot s 
+    f[6] =  1*delta_x+  10*delta_f*delta_f + 10*a_x*a_x;       //dot(L)
     //notice the gain in the cost functions should be carefully tunned. 
-     */
+      */
     
     //linerized model: 
     f[0] =  a_x;   //dot xp_dot
@@ -136,7 +136,8 @@ a_x = u(2);    %acc
     f[3] =  psi_dot - psi_dot_com;    // dot epsi
     f[4] =  yp_dot + xp_dot*epsi;    // dot ey 
     f[5] =  xp_dot ;     // dot s 
-    f[6] =  0.1*delta_x+  20*delta_f*delta_f + 20*a_x*a_x;       //dot(L)
+    f[6] =  0.01*delta_x+  20*delta_f*delta_f + 20*a_x*a_x;       //dot(L)
     //notice the gain in the cost functions should be carefully tunned. 
+     
     
 }

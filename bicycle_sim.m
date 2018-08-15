@@ -12,7 +12,7 @@ function bicycle_sim(T)
 clc;
 close all;
 if nargin < 1
-    T = 7; 
+    T = 10; 
 end
 
 
@@ -39,6 +39,8 @@ y0=[9.8;0;0; 0.0; 0 ; -0];
 
 global t_ctrl; 
 global u_ctrl; 
+global x_nom_next; 
+x_nom_next = y0; %nominal trajectory 
 t_ctrl = [0];
 u_ctrl = [0; 0];
 global scale  u_global; 
@@ -59,8 +61,9 @@ tspan = [0 T];
 
 % save all the data into .mat file  
 save('sim_data.mat');
+clear u_global flag_mode scale; 
 global name;  
-global pos_ob_array_pre;
+global pos_ob_array_pre radius_pre;
 save(name);
 disp('Data successfully stored!');
 
@@ -72,51 +75,110 @@ end
 function [u] = virtual_Control(t, y, trajd)
 global scale  u_global;
 global x_nom u_nom; 
+global flag_mode; 
 
 if (scale==0)
 %run mpc 
     %time horizon: 
-    horizon = 2; 
+    horizon = 5; 
     
     coef_.A = zeros(10,2);
     coef_.B = zeros(10,1);
-    % can address dynamics obstacles: 
-%     coef_ = cbf_seperate_mult_dynamic_complex_constraints([y; t]); 
-% 
-%     if (coef_.C == 1)
-%         %the feasible control space is empty
-%         u = [0; -4]; 
-%         u_global =u;
-%     else
-    %     using the mex-file: (should run unicycle_c_seperate.m firstly)
-        out = bicycle_input_RUN(t, t+horizon, ...
-            y(1), y(2), y(3), y(4), y(5), y(6),  ...
-            coef_.A(1,1), coef_.A(1,2), coef_.B(1), ... %row 1 
-            coef_.A(2,1), coef_.A(2,2), coef_.B(2),  ... %row 2 
-            coef_.A(3,1), coef_.A(3,2), coef_.B(3),  ... %row 3 
-            coef_.A(4,1), coef_.A(4,2), coef_.B(4),  ... %row 4 
-            coef_.A(5,1), coef_.A(5,2), coef_.B(5),  ...  %row 5 
-            coef_.A(6,1), coef_.A(6,2), coef_.B(6), ... %row 6 
-            coef_.A(7,1), coef_.A(7,2), coef_.B(7),  ... %row 7
-            coef_.A(8,1), coef_.A(8,2), coef_.B(8), ... %row 8 
-            coef_.A(9,1), coef_.A(9,2), coef_.B(9),  ... %row 9
-            coef_.A(10,1), coef_.A(10,2), coef_.B(10));
+    
+    if (flag_mode==1)  %mpc and cbf
+        % can address dynamics obstacles: 
+        coef_ = cbf_seperate_mult_dynamic_complex_constraints([y; t]); 
 
-
-        if (out.CONVERGENCE_ACHIEVED ==1)
-            u = out.CONTROLS(1,2:end)';   %the MPC control 
+        if (coef_.C == 1)
+            %the feasible control space is empty
+            u = [0; -4]; 
             u_global =u;
-            x_nom = out.STATES; 
-            u_nom = out.CONTROLS;
         else
-            u = [0; -4];  %the MPC solver does not converge
-            u_global =u;
-            x_nom = out.STATES; 
-            u_nom = out.CONTROLS;
+        %     using the mex-file: (should run unicycle_c_seperate.m firstly)
+            out = bicycle_input_RUN(t, t+horizon, ...
+                y(1), y(2), y(3), y(4), y(5), y(6),  ...
+                coef_.A(1,1), coef_.A(1,2), coef_.B(1), ... %row 1 
+                coef_.A(2,1), coef_.A(2,2), coef_.B(2),  ... %row 2 
+                coef_.A(3,1), coef_.A(3,2), coef_.B(3),  ... %row 3 
+                coef_.A(4,1), coef_.A(4,2), coef_.B(4),  ... %row 4 
+                coef_.A(5,1), coef_.A(5,2), coef_.B(5),  ...  %row 5 
+                coef_.A(6,1), coef_.A(6,2), coef_.B(6), ... %row 6 
+                coef_.A(7,1), coef_.A(7,2), coef_.B(7),  ... %row 7
+                coef_.A(8,1), coef_.A(8,2), coef_.B(8), ... %row 8 
+                coef_.A(9,1), coef_.A(9,2), coef_.B(9),  ... %row 9
+                coef_.A(10,1), coef_.A(10,2), coef_.B(10));
+
+
+            if (out.CONVERGENCE_ACHIEVED ==1)
+                u = out.CONTROLS(1,2:end)';   %the MPC control 
+                u_global =u;
+                x_nom = out.STATES; 
+                u_nom = out.CONTROLS;
+            else
+                u = [0; -4];  %the MPC solver does not converge
+                u_global =u;
+                x_nom = out.STATES; 
+                u_nom = out.CONTROLS;
+            end
         end
-%     end
-else
-	u = u_global;
+ 
+%             correct = cbf_seperate_mult_dynamic_complex_constraints_correct([y; t; u_global]);
+%             u = correct.u;
+%             u_global =u;
+ 
+    else
+        coef_.A = zeros(10,2);
+        coef_.B = ones(10,1);
+        out = bicycle_input_RUN(t, t+horizon, ...
+                y(1), y(2), y(3), y(4), y(5), y(6),  ...
+                coef_.A(1,1), coef_.A(1,2), coef_.B(1), ... %row 1 
+                coef_.A(2,1), coef_.A(2,2), coef_.B(2),  ... %row 2 
+                coef_.A(3,1), coef_.A(3,2), coef_.B(3),  ... %row 3 
+                coef_.A(4,1), coef_.A(4,2), coef_.B(4),  ... %row 4 
+                coef_.A(5,1), coef_.A(5,2), coef_.B(5),  ...  %row 5 
+                coef_.A(6,1), coef_.A(6,2), coef_.B(6), ... %row 6 
+                coef_.A(7,1), coef_.A(7,2), coef_.B(7),  ... %row 7
+                coef_.A(8,1), coef_.A(8,2), coef_.B(8), ... %row 8 
+                coef_.A(9,1), coef_.A(9,2), coef_.B(9),  ... %row 9
+                coef_.A(10,1), coef_.A(10,2), coef_.B(10));
+        u = out.CONTROLS(1,2:end)';   %the MPC control               
+        u_global =u;
+           
+       %%tube MPC: 
+%         global x_nom_next; 
+%         out = bicycle_input_RUN(t, t+horizon, ...
+%                 x_nom_next(1), x_nom_next(2), x_nom_next(3), x_nom_next(4), x_nom_next(5), x_nom_next(6),  ...
+%                 coef_.A(1,1), coef_.A(1,2), coef_.B(1), ... %row 1 
+%                 coef_.A(2,1), coef_.A(2,2), coef_.B(2),  ... %row 2 
+%                 coef_.A(3,1), coef_.A(3,2), coef_.B(3),  ... %row 3 
+%                 coef_.A(4,1), coef_.A(4,2), coef_.B(4),  ... %row 4 
+%                 coef_.A(5,1), coef_.A(5,2), coef_.B(5),  ...  %row 5 
+%                 coef_.A(6,1), coef_.A(6,2), coef_.B(6), ... %row 6 
+%                 coef_.A(7,1), coef_.A(7,2), coef_.B(7),  ... %row 7
+%                 coef_.A(8,1), coef_.A(8,2), coef_.B(8), ... %row 8 
+%                 coef_.A(9,1), coef_.A(9,2), coef_.B(9),  ... %row 9
+%                 coef_.A(10,1), coef_.A(10,2), coef_.B(10));
+%  
+%         u = out.CONTROLS(1,2:end)';   %the MPC control               
+%         x_nom = out.STATES(1,2:end-1)';   
+% %         u_nom = out.CONTROLS;
+%         x_nom_next = out.STATES(2, 2:end-1)';   
+%         k =  11*[0, 0.1, 0.01, 0.01, 0.01, 0.0; 0.1, 0, 0, 0, 0.1, 0]; 
+%         u = k*(x_nom - y) + u;
+%         u_global =u;
+        
+    end
+elseif (mod(scale, 20)==0)
+    if (flag_mode==1)  %mpc and cbf
+%         correct = cbf_seperate_mult_dynamic_complex_constraints_correct([y; t; u_global]);
+%         u = correct.u;
+%         u_global =u;
+        u = u_global; 
+    else
+        u = u_global; 
+    end
+else 
+    u = u_global; 
 end
 
 % if (mod(scale, 20)==0)
@@ -126,6 +188,8 @@ end
 %     x_nom_cur = x_nom(i_cur,2:end-1)';
 %     u_nom_cur = u_nom(i_cur,2:end)';
 %     u = k*(x_nom_cur - y) + u_nom_cur;
+%     
+%      
 %         
 % %     if (coef_.C == 1)
 % %         %the feasible control space is empty
@@ -145,12 +209,9 @@ end
 %     u = u_global;
 % end
 
-%  u = [0;0];
-
-% scale = 2; 
 
 scale = scale+1;
-if (scale == 10)
+if (scale == 50)
     scale = 0;
 end
 end
@@ -215,7 +276,7 @@ f_x = [ yp_dot*psi_dot;...
      -2*(a*cf-b*cr)/Iz/xp_dot*yp_dot-2*(a*a*cf+b*b*cr)/Iz/xp_dot*psi_dot;...
      psi_dot - psi_dot_com;...
      yp_dot*cos(epsi) + xp_dot*sin(epsi); ...
-     xp_dot*cos(epsi)-yp_dot*cos(epsi)];
+     xp_dot*cos(epsi)-yp_dot*sin(epsi)];
  
 g_x = [0, 1; ...
     2*cf/m, 0; ...

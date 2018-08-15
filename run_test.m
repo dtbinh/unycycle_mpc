@@ -1,19 +1,33 @@
 
 
-
+clear all;
 main_tune;
 
+global pos_ob_array_pre radius_pre;
+global no_ob;
 
-for testii=1:50
-    global pos_ob_array_pre;
+load pos_ob_array_pre_store3.mat; 
+
+
+for testii=22:22
+   
     global name; 
-    name = ['mpconly', num2str(testii),]; 
+    global flag_mode; 
+    no_ob = 5;
 
-    for i=1:5
-        pos_ob_array_pre(:,i) = [50+20*rand(1,1);  -2.7 + 5.4*rand(1,1) ];
-    end
+    pos_ob_array_pre =  pos_ob_array_pre_store(:,:,testii);
+    radius_pre = radius_pre_store(:,testii);
     
+    %mpc and cbf
+    flag_mode =1;     
+    name = ['mpc_cbf_20180812', num2str(testii),];         
     unicycle_c_seperate;
-    run bicycle_sim.m; 
+    bicycle_sim; 
+    
+    %mpc only: 
+%     flag_mode =2; 
+%     name = ['mpc_20180810', num2str(testii),]; 
+%     unicycle_c_seperate;
+%     run bicycle_sim.m; 
     
 end

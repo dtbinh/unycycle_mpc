@@ -53,10 +53,11 @@ title('POSITION TRACKING:SENSED VS COMMAND');
 % legend('traj_{com}','traj_{sen}');
 axis equal; 
 
-global pos_ob_array_pre;
+global pos_ob_array_pre radius_pre;
+%pos_ob_array_pre(2, :) = - pos_ob_array_pre(2,:);  %only for plot the mpc data with mistake 
 for i=1:size(pos_ob_array_pre,2)
     plot(pos_ob_array_pre(1,i), pos_ob_array_pre(2,i), '*r'); hold on; 
-    Ds =1 ;
+    Ds =radius_pre(i);
     circle(Ds,pos_ob_array_pre(1,i), pos_ob_array_pre(2,i)); hold on; 
 end
  
@@ -90,7 +91,7 @@ ylabel('distance');
  
  
  figure(4); 
-  plot(t_ctrl, u_ctrl); 
+  plot(t_ctrl, u_ctrl(1:2,:)); 
 ylabel('control');
  xlabel('time(s)');
  
@@ -122,5 +123,11 @@ ylabel('control');
 % ylabel('nominal input 2');xlabel('time(s)');
 
 
+%%road side:
+road_side_x = min(P_sens(:,1)):0.1:max(P_sens(:,1));
+road_side_y1 = 3.7*ones(1, length(road_side_x));
+road_side_y2 = -3.7*ones(1, length(road_side_x));
+figure(1);
+plot(road_side_x,road_side_y1,'-.k',road_side_x,road_side_y2,'-.k'); hold on;
 
 
